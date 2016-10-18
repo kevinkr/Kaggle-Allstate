@@ -172,8 +172,6 @@ ggplot(train) + geom_histogram(mapping=aes(x=log(loss)))
 
 summary(train$loss)
 
-cnt <- train[train$loss>3864,]
-> nrow(cnt)
 
 # describe various statistics
 describe(train$loss)
@@ -183,7 +181,21 @@ describe(train$loss)
 upper.outer.fence <- quantile(train$loss,0.75) + 3*(quantile(train$loss,0.75)-quantile(train$loss,0.25))
 count(train, loss>upper.outer.fence)
 
+# consider analysis of outliers
+# based on https://www.kaggle.com/kb3gjt/allstate-claims-severity/allstateeda1
+outliers <- train[train$loss > upper.outer.fence,]
+outlier.index <- which(train$loss > upper.outer.fence)
 
+summary(outliers$loss)
+plot(outliers$loss)
+hist(log(outliers$loss),100)
+
+# create vectors to hold correlation values against loss
+cc <- rep(0,132)
+cco <- rep(0,132)
+for (i in 1:131) cc[i] <- cor(train$loss,as.numeric(train[,i]))
+for (i in 1:131) cco[i] <- cor(outliers$loss,
+                               as.numeric(outliers[,i]))
 
 
 
