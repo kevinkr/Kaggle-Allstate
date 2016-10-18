@@ -5,8 +5,8 @@
 source("Code/packages.R")
 
 #Load data
-train <- fread("Data/Raw/train.csv", stringsAsFactors=FALSE)
-test <- fread("Data/Raw/test.csv", stringsAsFactors=FALSE)
+train <- fread("Data/Raw/train.csv", stringsAsFactors=FALSE, header = TRUE)
+test <- fread("Data/Raw/test.csv", stringsAsFactors=FALSE, header = TRUE)
 
 #printing some missing data
 sum(is.na(train[,]))
@@ -172,8 +172,6 @@ ggplot(train) + geom_histogram(mapping=aes(x=log(loss)))
 
 summary(train$loss)
 
-cnt <- train[train$loss>3864,]
-> nrow(cnt)
 
 # describe various statistics
 describe(train$loss)
@@ -183,11 +181,52 @@ describe(train$loss)
 upper.outer.fence <- quantile(train$loss,0.75) + 3*(quantile(train$loss,0.75)-quantile(train$loss,0.25))
 count(train, loss>upper.outer.fence)
 
+# consider analysis of outliers
+# based on https://www.kaggle.com/kb3gjt/allstate-claims-severity/allstateeda1
+outliers <- train[train$loss > upper.outer.fence,]
+outlier.index <- which(train$loss > upper.outer.fence)
+
+summary(outliers$loss)
+plot(outliers$loss)
+hist(log(outliers$loss),100)
+
+# factorize variables
+train <- train %>% mutate_each(funs(factor), starts_with("cat"))
+# create vectors to hold correlation values against loss
+cc <- rep(0,132)
+cco <- rep(0,132)
+for (i in 1:131) cc[i] <- cor(train$loss,as.numeric(train[,i]))
+for (i in 1:131) cco[i] <- cor(outliers$loss,
+                               as.numeric(outliers[,i]))
+
+# capture standard deviations
+sdo <- rep(0,132)
+for (i in 1:132) sdo[i] <- sd(as.numeric(outliers[,i]))
+which(sdo==0)
+# 16 22 23 57 63 64 71
+
+# plot the correlations
+plot(cc)
+points(cco, col="red")
+
+which(abs(cc)>0.3)
+
+which(abs(cco)>0.3)
 
 
+#################################################
+## re-run with spearman's method ####################
+#####################################
+# create vectors to hold correlation values against loss
+ccs <- rep(0,132)
+ccso <- rep(0,132)
+for (i in 1:131) ccs[i] <- cor(train$loss,as.numeric(train[,i]), method = "spearman")
+for (i in 1:131) ccso[i] <- cor(outliers$loss,
+                               as.numeric(outliers[,i]), method = "spearman")
 
-
-
+# plot the correlations
+plot(ccs)
+points(ccso, col="red")
 
 
 #########################

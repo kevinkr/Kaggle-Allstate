@@ -12,6 +12,7 @@
 #install.packages("FactoMineR", dependencies = TRUE)
 #install.packages("corrplot", dependencies = TRUE)
 #install.packages("psych", dependencies = TRUE)
+#install.packages("glmnet", dependencies = TRUE)
 
 library("Amelia")
 library("dplyr")
@@ -23,3 +24,4 @@ library(vcd)
 library(FactoMineR)
 library(corrplot)
 library(psych)
+library(glmnet)
