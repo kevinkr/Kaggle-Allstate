@@ -172,19 +172,38 @@ ggplot(train) + geom_histogram(mapping=aes(x=log(loss)))
 
 summary(train$loss)
 
-ggplot(train) + geom_histogram(mapping=aes(x=cont1))
+cnt <- train[train$loss>3864,]
+> nrow(cnt)
 
-cont_vars <- colnames(train)[!sapply(train, is.factor)]
-cont_vars <- grep("cont", cont_vars, value = TRUE)
+# describe various statistics
+describe(train$loss)
 
+#consider outlier cutoff
+# upper outer fence: Q3 + 3*IQ
+upper.outer.fence <- quantile(train$loss,0.75) + 3*(quantile(train$loss,0.75)-quantile(train$loss,0.25))
+count(train, loss>upper.outer.fence)
+
+
+
+
+
+
+
+
+#########################
+#Examine continuous variables
+##########################
 describe(train.num)
-boxplot(train.num, main ="Test Data Continuos Vars")
-
-plot(train$loss,exp(train.num$cont1))
-plot(train$loss,train.num$cont1)
-
-
 
 # Correlations
 correlations <- cor(train.num)
 corrplot(correlations, method="square", order="hclust")
+
+# view plot of continuous variables
+boxplot(train.num, main ="Test Data Continuos Vars")
+
+
+ggplot(train) + geom_histogram(mapping=aes(x=cont1))
+
+plot(train$loss,exp(train.num$cont1))
+plot(train$loss,train.num$cont1)
