@@ -30,11 +30,11 @@ str(data, list.len = 999)
 # Create lists of column names
 cat.var <- names(train)[which(sapply(train, is.character))]
 num.var <- names(train)[which(sapply(train, is.numeric))]
-num.var <- setdiff(num_var, c("id", "loss"))
+num.var <- setdiff(num.var, c("id", "loss"))
 
 
-train.cat <- train[,.SD,.SDcols = cat_var]
-train.num <- train[, .SD, .SDcols = num_var]
+train.cat <- train[,.SD,.SDcols = cat.var]
+train.num <- train[, .SD, .SDcols = num.var]
 
 
 ###################
@@ -88,31 +88,103 @@ doPlots(train.cat, fun = plotBox, ii =85:96, lab=log(train$loss), ncol = 3)
 doPlots(train.cat, fun = plotBox, ii =97:108, lab=log(train$loss), ncol = 3)
 doPlots(train.cat, fun = plotBox, ii =109:116, lab=log(train$loss), ncol = 3)
 
+# continuous density plot
 doPlots(train.num, fun = plotDen, ii =1:6, lab=log(train$loss), ncol = 3)
 doPlots(train.num, fun = plotDen, ii =7:14, lab=log(train$loss), ncol = 3)
 
+#continuous scatterplot
+doPlots(train.num, fun = plotScatter, ii =1:6, lab=log(train$loss), ncol = 3)
+doPlots(train.num, fun = plotScatter, ii =7:14, lab=log(train$loss), ncol = 3)
+
+# Examine counts of factors in categories
+train.cat.factored <- train.cat %>% mutate_each(funs(factor), starts_with("cat"))
 
 
-# Examine proportions
-mosaicplot(traincat$cat1:traincat$cat4)
+###########
+# Categories
+##############
+# number of categories per variable
+cats = apply(train.cat, 2, function(x) nlevels(as.factor(x)))
+cats
 
-# factorize categoricals
-traincat <- train %>% mutate_each(funs(factor), starts_with("cat"))
+#######################
+# Not useful in this case with so many variables
+# correspondence (see http://gastonsanchez.com/how-to/2012/10/13/MCA-in-R/)
+cats = apply(train.cat.factored[,110:116], 2, function(x) nlevels(as.factor(x)))
+mca1 = MCA(train.cat.factored[,110:116], graph = FALSE)
 
-mosaicplot(traincat$cat1 ~ traincat$cat4, shade=TRUE)
+# data frame with variable coordinates
+mca1_vars_df = data.frame(mca1$var$coord, Variable = rep(names(cats), cats))
 
-mosaicplot(table(traincat$cat1, traincat$cat100), col = TRUE, las = 2, cex.axis = 0.8, shade=TRUE)
+# data frame with observation coordinates
+mca1_obs_df = data.frame(mca1$ind$coord)
+
+# plot of variable categories
+ggplot(data=mca1_vars_df, 
+       aes(x = Dim.1, y = Dim.2, label = rownames(mca1_vars_df))) +
+  geom_hline(yintercept = 0, colour = "gray70") +
+  geom_vline(xintercept = 0, colour = "gray70") +
+  geom_text(aes(colour=Variable)) +
+  ggtitle("MCA plot of variables using R package FactoMineR")
+#########################
 
 
-table(train)
-barplot(xtabs(~traincat$cat1))
+# Piechart of categorical
+pie(table(train.cat$cat100))
+
+barplot(table(train.cat$cat101))
 
 library(gmodels)
 CrossTable(train$cat1,train$cat2, prop.t=FALSE,prop.r=FALSE,prop.c=FALSE)
 
+
+lapply(train.cat, table)
+
+#display counts of category
+ggp <- ggplot(train.cat,aes(x=cat1))
+ggp + geom_bar()
+
 library(plyr)
-count(train, 'cat1')
+apply(train.cat, 2, count)
+
+#Examine proportions
+mosaicplot(cat1 ~cat4, data = train.cat, col = c('lightskyblue2', 'tomato'))
+
+mosaicplot(table(traincat$cat1, traincat$cat2), col = TRUE, las = 2, cex.axis = 0.8, shade=TRUE)
+
+
+# 3-Way Frequency Table
+mytable <- xtabs(~cat1+cat2, data=train.cat)
+ftable(mytable) # print table 
+summary(mytable) # chi-square test of indepedenc
 
 
 
 
+
+########################
+# Examine continuous variables
+########################
+plot(train$loss)
+hist(log(train$loss),100)
+
+ggplot(train) + geom_histogram(mapping=aes(x=log(loss)))
+
+summary(train$loss)
+
+ggplot(train) + geom_histogram(mapping=aes(x=cont1))
+
+cont_vars <- colnames(train)[!sapply(train, is.factor)]
+cont_vars <- grep("cont", cont_vars, value = TRUE)
+
+describe(train.num)
+boxplot(train.num, main ="Test Data Continuos Vars")
+
+plot(train$loss,exp(train.num$cont1))
+plot(train$loss,train.num$cont1)
+
+
+
+# Correlations
+correlations <- cor(train.num)
+corrplot(correlations, method="square", order="hclust")
