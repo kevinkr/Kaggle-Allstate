@@ -20,10 +20,10 @@ subTest <- train[-trainIndex,]
 test.m <- data.matrix(test[,1:131])
 
 subTrain.m <- data.matrix(subTrain[,1:131])
-subTrain.y <- data.matrix(subTrain$loss)
+subTrain.y <- data.matrix(log(subTrain$loss))
 
 subTest.m <- data.matrix(subTest[,1:131])
-subTest.y <- data.matrix(subTest$loss)
+subTest.y <- data.matrix(log(subTest$loss))
 
 # fit model
 fit = glmnet(subTrain.m, subTrain.y)
@@ -34,11 +34,15 @@ plot(fit)
 cv.fit <- cv.glmnet(subTrain.m,subTrain.y)
 plot(cv.fit)
 
-test.pred <- predict(fit,newx=subTest.m,s=cv.fit$lambda.min)
-mte <- apply((test.pred-subTest.y)^2,2,mean)
+# perform test again test set . . .
+# NOT WORKING NOW
+
+#test.pred <- predict(fit,newx=subTest.m,s=cv.fit$lambda.min)
+#mte <- apply((test.pred-subTest.y)^2,2,mean)
 
 #points(log(fit$lambda),mte,col="blue",pch="*")
 #legend("topleft",legend=c("10 fold CV","Test"),pch="*",col=c("red","blue"))
+################
 
 plot(fit,xvar="lambda")
 plot(fit,xvar="dev")
@@ -54,7 +58,7 @@ test.df$predictionColumn<-c(predictions)
 
 #pred.df <-as.data.frame(t(predictions))
 
-solution <- data.frame(id = test.df$id, loss = test.df$predictionColumn)
+solution <- data.frame(id = test.df$id, loss = round(exp(test.df$predictionColumn),2))
 
 # Write the solution to file
-write.csv(solution, file = 'Submissions/glmnet-learning-101916-1.csv', row.names = F)
+write.csv(solution, file = 'Submissions/glmnet-learning-logloss-101916-1.csv', row.names = F)
