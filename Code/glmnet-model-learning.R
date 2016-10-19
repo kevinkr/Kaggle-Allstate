@@ -20,6 +20,7 @@ train.y <- data.matrix(train$loss)
 
 # fit model
 fit = glmnet(train.m, train.y)
+cv <- cv.glmnet(train.m,train.y,nfolds=3)
 # summarize the fit
 summary(fit)
 plot(fit)
@@ -27,14 +28,15 @@ plot(fit)
 # See http://stats.stackexchange.com/questions/188753/lasso-regression-for-predicting-continuous-variable-variable-selection
 plot(fit, xvar = "lambda")
 
-coef(fit,s=0.1)
-log(0.1)
 
-predictions <- predict(fit,newx=test.m,s=c(0.1,0.05))
+predictions <- predict(fit,newx=test.m,s=cv$lambda.min)
+test.df <- as.data.frame(test.m)
+test.df$predictionColumn<-c(predictions)
 
-pred.df <-as.data.frame(t(predictions))
 
-solution <- data.frame(PassengerID = test$PassengerId, Survived = prediction)
+#pred.df <-as.data.frame(t(predictions))
+
+solution <- data.frame(id = test.df$id, loss = test.df$predictionColumn)
 
 # Write the solution to file
-write.csv(solution, file = 'megan-risdal-orig-Solution-kk-v2.csv', row.names = F)
+write.csv(solution, file = 'Submissions/glmnet-learning-101916-1.csv', row.names = F)
