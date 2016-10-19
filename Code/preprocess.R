@@ -190,14 +190,17 @@ summary(outliers$loss)
 plot(outliers$loss)
 hist(log(outliers$loss),100)
 
+
 # factorize variables
 train <- train %>% mutate_each(funs(factor), starts_with("cat"))
+
 # create vectors to hold correlation values against loss
 cc <- rep(0,132)
 cco <- rep(0,132)
 for (i in 1:131) cc[i] <- cor(train$loss,as.numeric(train[,i]))
 for (i in 1:131) cco[i] <- cor(outliers$loss,
                                as.numeric(outliers[,i]))
+
 
 # capture standard deviations
 sdo <- rep(0,132)
@@ -227,6 +230,7 @@ for (i in 1:131) ccso[i] <- cor(outliers$loss,
 # plot the correlations
 plot(ccs)
 points(ccso, col="red")
+
 
 
 #########################
