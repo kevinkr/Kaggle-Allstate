@@ -2,18 +2,18 @@
 # Start: 10-13-16
 
 #install packages
-install.packages("ggplot2", dependencies = TRUE)
-install.packages("Amelia", dependencies = TRUE)
-install.packages("dplyr", dependencies = TRUE)
-install.packages("data.table", dependencies = TRUE)
-install.packages("gridExtra", dependencies = TRUE)
-install.packages("e1071", dependencies = TRUE)
-install.packages("vcd", dependencies = TRUE)
-install.packages("FactoMineR", dependencies = TRUE)
-install.packages("corrplot", dependencies = TRUE)
-install.packages("psych", dependencies = TRUE)
-install.packages("glmnet", dependencies = TRUE)
-install.packages("caret", dependencies = TRUE)
+# install.packages("ggplot2", dependencies = TRUE)
+# install.packages("Amelia", dependencies = TRUE)
+# install.packages("dplyr", dependencies = TRUE)
+# install.packages("data.table", dependencies = TRUE)
+# install.packages("gridExtra", dependencies = TRUE)
+# install.packages("e1071", dependencies = TRUE)
+# install.packages("vcd", dependencies = TRUE)
+# install.packages("FactoMineR", dependencies = TRUE)
+# install.packages("corrplot", dependencies = TRUE)
+# install.packages("psych", dependencies = TRUE)
+# install.packages("glmnet", dependencies = TRUE)
+# install.packages("caret", dependencies = TRUE)
 
 library("Amelia")
 
