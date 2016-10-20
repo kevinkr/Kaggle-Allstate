@@ -125,17 +125,8 @@ summary(train$loss)
 
 # describe various statistics
 describe(train$loss)
-
-
-
-#########################
-#Examine continuous variables
-##########################
 describe(train.num)
 
-# Correlations
-correlations <- cor(train.num)
-corrplot(correlations, method="square", order="hclust")
 
 # view plot of continuous variables
 boxplot(train.num, main ="Test Data Continuos Vars")
@@ -145,3 +136,28 @@ ggplot(train) + geom_histogram(mapping=aes(x=cont1))
 
 plot(train$loss,exp(train.num$cont1))
 plot(train$loss,train.num$cont1)
+
+
+aggregate(train$loss, mean, sd)
+
+#########################
+#Examine correlations
+##########################
+
+# Correlations
+correlations <- cor(train.num)
+corrplot(correlations, method="square", order="hclust")
+
+
+
+# factor analysis - see http://rtutorialseries.blogspot.com/2011/10/r-tutorial-series-exploratory-factor.html
+
+corMat <- cor(train.num)
+solution <- fa(r = corMat, nfactors = 2, rotate = "oblimin", fm = "pa")
+solution
+
+###############################
+# Intro to Anova test
+##############################
+
+anova(lm(loss ~ cont1 + cont2 + cont3, train))

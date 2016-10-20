@@ -96,6 +96,7 @@ hist(log(outliers$loss),100)
 
 # factorize variables
 train <- train %>% mutate_each(funs(factor), starts_with("cat"))
+outliers <- outliers %>% mutate_each(funs(factor), starts_with("cat"))
 
 # create vectors to hold correlation values against loss
 cc <- rep(0,132)
