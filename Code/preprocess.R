@@ -56,6 +56,7 @@ doPlots <- function(data_in, fun, ii, lab, ncol=3) {
   do.call("grid.arrange", c(pp, ncol=ncol))
 }
 
+
 plotScatter <- function(data_in, i, lab){
   data <- data.frame(x=data_in[[i]], y = lab)
   p <- ggplot(data= data, aes(x = x, y=y)) + geom_point(size=1, alpha=0.3)+ geom_smooth(method = lm) +
@@ -88,6 +89,7 @@ doPlots(train.cat, fun = plotBox, ii =85:96, lab=log(train$loss), ncol = 3)
 doPlots(train.cat, fun = plotBox, ii =97:108, lab=log(train$loss), ncol = 3)
 doPlots(train.cat, fun = plotBox, ii =109:116, lab=log(train$loss), ncol = 3)
 
+########################
 # continuous density plot
 doPlots(train.num, fun = plotDen, ii =1:6, lab=log(train$loss), ncol = 3)
 doPlots(train.num, fun = plotDen, ii =7:14, lab=log(train$loss), ncol = 3)
@@ -107,7 +109,13 @@ train.cat.factored <- train.cat %>% mutate_each(funs(factor), starts_with("cat")
 cats = apply(train.cat, 2, function(x) nlevels(as.factor(x)))
 cats
 
-#######################
+
+
+
+
+
+
+######################################################################
 # Not useful in this case with so many variables
 # correspondence (see http://gastonsanchez.com/how-to/2012/10/13/MCA-in-R/)
 cats = apply(train.cat.factored[,110:116], 2, function(x) nlevels(as.factor(x)))
@@ -126,7 +134,7 @@ ggplot(data=mca1_vars_df,
   geom_vline(xintercept = 0, colour = "gray70") +
   geom_text(aes(colour=Variable)) +
   ggtitle("MCA plot of variables using R package FactoMineR")
-#########################
+#####################################################################
 
 
 # Piechart of categorical
@@ -137,11 +145,11 @@ barplot(table(train.cat$cat101))
 library(gmodels)
 CrossTable(train$cat1,train$cat2, prop.t=FALSE,prop.r=FALSE,prop.c=FALSE)
 
-
+#distribution of variables per cateogry
 lapply(train.cat, table)
 
 #display counts of category
-ggp <- ggplot(train.cat,aes(x=cat1))
+ggp <- ggplot(train.cat,aes(x=cat109))
 ggp + geom_bar()
 
 library(plyr)
@@ -176,15 +184,87 @@ summary(train$loss)
 # describe various statistics
 describe(train$loss)
 
+###############################################
+# Analyze outliers
+##############################################
 #consider outlier cutoff
 # upper outer fence: Q3 + 3*IQ
 upper.outer.fence <- quantile(train$loss,0.75) + 3*(quantile(train$loss,0.75)-quantile(train$loss,0.25))
-count(train, loss>upper.outer.fence)
+length(which(train$loss > upper.outer.fence))
+
+#lower inner fence
+# Q1-1.5(IQR)
+lower.inner.fence <- quantile(train$loss,0.25) - 1.5*(quantile(train$loss,0.75)-quantile(train$loss,0.25))
+length(which(train$loss < lower.inner.fence))
+# Value is 0, lower fence outside lowest value(0)
 
 # consider analysis of outliers
 # based on https://www.kaggle.com/kb3gjt/allstate-claims-severity/allstateeda1
 outliers <- train[train$loss > upper.outer.fence,]
 outlier.index <- which(train$loss > upper.outer.fence)
+notoutliers <- train[-outlier.index]
+
+outliers.cat <- outliers[,.SD,.SDcols = cat.var]
+outliers.num <- outliers[, .SD, .SDcols = num.var]
+
+plot(outliers$loss)
+hist(log(outliers$loss),100)
+
+plot(notoutliers$loss)
+hist(log(notoutliers$loss),100)
+
+# Plots for outliers
+doPlots(outliers.cat, fun = plotBox, ii =1:12, lab=log(outliers$loss), ncol = 3)
+doPlots(outliers.cat, fun = plotBox, ii =13:24, lab=log(outliers$loss), ncol = 3)
+doPlots(outliers.cat, fun = plotBox, ii =25:36, lab=log(outliers$loss), ncol = 3)
+doPlots(outliers.cat, fun = plotBox, ii =37:48, lab=log(outliers$loss), ncol = 3)
+doPlots(outliers.cat, fun = plotBox, ii =49:60, lab=log(outliers$loss), ncol = 3)
+doPlots(outliers.cat, fun = plotBox, ii =61:72, lab=log(outliers$loss), ncol = 3)
+doPlots(outliers.cat, fun = plotBox, ii =73:84, lab=log(outliers$loss), ncol = 3)
+doPlots(outliers.cat, fun = plotBox, ii =85:96, lab=log(outliers$loss), ncol = 3)
+doPlots(outliers.cat, fun = plotBox, ii =97:108, lab=log(outliers$loss), ncol = 3)
+doPlots(outliers.cat, fun = plotBox, ii =109:116, lab=log(outliers$loss), ncol = 3)
+
+########################
+# continuous density plot
+doPlots(outliers.num, fun = plotDen, ii =1:6, lab=log(outliers$loss), ncol = 3)
+doPlots(outliers.num, fun = plotDen, ii =7:14, lab=log(outliers$loss), ncol = 3)
+
+#continuous scatterplot
+doPlots(outliers.num, fun = plotScatter, ii =1:6, lab=log(outliers$loss), ncol = 3)
+doPlots(outliers.num, fun = plotScatter, ii =7:14, lab=log(outliers$loss), ncol = 3)
+
+
+
+#######################
+# Not outliers
+notoutliers <- train[-outlier.index]
+
+notoutliers.cat <- notoutliers[,.SD,.SDcols = cat.var]
+notoutliers.num <- notoutliers[, .SD, .SDcols = num.var]
+
+
+# Plots for nonoutliers
+doPlots(notoutliers.cat, fun = plotBox, ii =1:12, lab=log(notoutliers$loss), ncol = 3)
+doPlots(notoutliers.cat, fun = plotBox, ii =13:24, lab=log(notoutliers$loss), ncol = 3)
+doPlots(notoutliers.cat, fun = plotBox, ii =25:36, lab=log(notoutliers$loss), ncol = 3)
+doPlots(notoutliers.cat, fun = plotBox, ii =37:48, lab=log(notoutliers$loss), ncol = 3)
+doPlots(notoutliers.cat, fun = plotBox, ii =49:60, lab=log(notoutliers$loss), ncol = 3)
+doPlots(notoutliers.cat, fun = plotBox, ii =61:72, lab=log(notoutliers$loss), ncol = 3)
+doPlots(notoutliers.cat, fun = plotBox, ii =73:84, lab=log(notoutliers$loss), ncol = 3)
+doPlots(notoutliers.cat, fun = plotBox, ii =85:96, lab=log(notoutliers$loss), ncol = 3)
+doPlots(notoutliers.cat, fun = plotBox, ii =97:108, lab=log(notoutliers$loss), ncol = 3)
+doPlots(notoutliers.cat, fun = plotBox, ii =109:116, lab=log(notoutliers$loss), ncol = 3)
+
+########################
+# continuous density plot
+doPlots(notoutliers.num, fun = plotDen, ii =1:6, lab=log(notoutliers$loss), ncol = 3)
+doPlots(notoutliers.num, fun = plotDen, ii =7:14, lab=log(notoutliers$loss), ncol = 3)
+
+#continuous scatterplot
+doPlots(notoutliers.num, fun = plotScatter, ii =1:6, lab=log(notoutliers$loss), ncol = 3)
+doPlots(notoutliers.num, fun = plotScatter, ii =7:14, lab=log(notoutliers$loss), ncol = 3)
+
 
 summary(outliers$loss)
 plot(outliers$loss)
