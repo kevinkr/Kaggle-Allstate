@@ -30,3 +30,8 @@ library(glmnet)
 library(caret)
 library(data.table)
 library("dplyr")
+
+#parallel computing
+#install.packages("doMC", dependencies = TRUE)
+#require(doMC)
+
