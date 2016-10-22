@@ -14,6 +14,8 @@
 # install.packages("psych", dependencies = TRUE)
 # install.packages("glmnet", dependencies = TRUE)
 # install.packages("caret", dependencies = TRUE)
+# install.packages("TDboost", dependencies = TRUE)
+# install.packages("HDtweedie", dependencies = TRUE)
 
 library("Amelia")
 
@@ -30,6 +32,8 @@ library(glmnet)
 library(caret)
 library(data.table)
 library("dplyr")
+library(TDboost)
+library(HDtweedie)
 
 #parallel computing
 #install.packages("doMC", dependencies = TRUE)

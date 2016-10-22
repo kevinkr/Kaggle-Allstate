@@ -51,14 +51,6 @@ doPlots(train.cat, fun = plotBox, ii =85:96, lab=log(train$loss), ncol = 3)
 doPlots(train.cat, fun = plotBox, ii =97:108, lab=log(train$loss), ncol = 3)
 doPlots(train.cat, fun = plotBox, ii =109:116, lab=log(train$loss), ncol = 3)
 
-########################
-# continuous density plot
-doPlots(train.num, fun = plotDen, ii =1:6, lab=log(train$loss), ncol = 3)
-doPlots(train.num, fun = plotDen, ii =7:14, lab=log(train$loss), ncol = 3)
-
-#continuous scatterplot
-doPlots(train.num, fun = plotScatter, ii =1:6, lab=log(train$loss), ncol = 3)
-doPlots(train.num, fun = plotScatter, ii =7:14, lab=log(train$loss), ncol = 3)
 
 # Examine counts of factors in categories
 train.cat.factored <- train.cat %>% mutate_each(funs(factor), starts_with("cat"))
@@ -70,13 +62,6 @@ train.cat.factored <- train.cat %>% mutate_each(funs(factor), starts_with("cat")
 # number of categories per variable
 cats = apply(train.cat, 2, function(x) nlevels(as.factor(x)))
 cats
-
-
-
-
-
-
-
 
 
 # Piechart of categorical
@@ -102,68 +87,3 @@ mosaicplot(cat1 ~cat4, data = train.cat, col = c('lightskyblue2', 'tomato'))
 
 mosaicplot(table(traincat$cat1, traincat$cat2), col = TRUE, las = 2, cex.axis = 0.8, shade=TRUE)
 
-
-
-
-
-
-
-
-########################
-# Examine continuous variables
-########################
-plot(train$loss)
-hist(log(train$loss),100)
-
-g <- ggplot(train, aes(x=loss))
-g + geom_histogram(binwidth = 5) + geom_density()
-
-g <- ggplot(train, aes(x=cont1))
-g + geom_histogram(binwidth = 5) + geom_density()
-
-g <- ggplot(train, aes(x=exp(cont2)))
-g + geom_histogram(binwidth = 5) + geom_density()
-
-
-
-summary(train$loss)
-
-
-# describe various statistics
-describe(train$loss)
-describe(train.num)
-
-
-# view plot of continuous variables
-boxplot(train.num, main ="Test Data Continuos Vars")
-
-
-ggplot(train) + geom_histogram(mapping=aes(x=cont1))
-
-plot(train$loss,exp(train.num$cont1))
-plot(train$loss,train.num$cont1)
-
-
-aggregate(train$loss, mean, sd)
-
-#########################
-#Examine correlations
-##########################
-
-# Correlations
-correlations <- cor(train.num)
-corrplot(correlations, method="square", order="hclust")
-
-
-
-# factor analysis - see http://rtutorialseries.blogspot.com/2011/10/r-tutorial-series-exploratory-factor.html
-
-corMat <- cor(train.num)
-solution <- fa(r = corMat, nfactors = 2, rotate = "oblimin", fm = "pa")
-solution
-
-###############################
-# Intro to Anova test
-##############################
-
-anova(lm(loss ~ cont1 + cont2 + cont3, train))
