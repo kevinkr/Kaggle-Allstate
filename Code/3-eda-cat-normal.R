@@ -83,7 +83,6 @@ library(plyr)
 apply(train.cat, 2, count)
 
 #Examine proportions
-mosaicplot(cat1 ~cat4, data = train.cat, col = c('lightskyblue2', 'tomato'))
-
-mosaicplot(table(traincat$cat1, traincat$cat2), col = TRUE, las = 2, cex.axis = 0.8, shade=TRUE)
+mosaicplot(cat1 ~cat4, data = train.cat, col = c('lightskyblue2', 'tomato')
+mosaicplot(table(train$cat1, train$cat2), col = TRUE, las = 2, cex.axis = 0.8, shade=TRUE)
 
