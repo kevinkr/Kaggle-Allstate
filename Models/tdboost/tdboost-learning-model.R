@@ -2,10 +2,10 @@
 # Start: 10-13-16
 
 #load packages
-source("Code/packages.R")
 source("Code/1-load data.R")
 
 train <- train %>% mutate_each(funs(factor), starts_with("cat"))
+test <- test %>% mutate_each(funs(factor), starts_with("cat"))
 
 set.seed(3456)
 trainIndex <- createDataPartition(train$loss, p = 0.8, list=FALSE, times=1)
@@ -16,7 +16,14 @@ subTest <- train[-trainIndex,]
 trainSet <- subTrain[-c(1)]
 testSet <- subTest[-c(1)]
 
-fit <- TDboost(loss ~. , data=trainSet, cv.folds=5, n.trees=300, interaction.depth = 20)
+# fix missing category value in cat69
+id <- which(!(test$cat89 %in% levels(train$cat89)))
+#hacked
+test$cat89[67038] <- "E"
+test$cat89[88842] <- "E"
+
+#fit <- TDboost(loss ~. , data=trainSet, cv.folds=5, n.trees=300, interaction.depth = 20)
+fit <- TDboost(loss ~. , data=trainSet, cv.folds=5, n.trees=100, interaction.depth = 20)
 
 # print out optimal iteration number
 best.iter <- TDboost.perf(fit, method="test")
@@ -36,6 +43,6 @@ f.predict <- predict.TDboost(fit, testSet, best.iter)
 print(sum((testSet$y - f.predict)^2))
 
 # get predictions
-testSet.predict <- 
-testSet$predictionColumn<-c(predictions)
+test$loss <- predict.TDboost(fit, test, best.iter)
+solution <- data.frame(id = testSet$id, loss = round(testSet$loss,2))
 
