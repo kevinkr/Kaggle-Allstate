@@ -17,10 +17,17 @@ trainSet <- subTrain[-c(1)]
 testSet <- subTest[-c(1)]
 
 # fix missing category value in cat69
-id <- which(!(test$cat89 %in% levels(train$cat89)))
+id <- which(!(train$cat89 %in% levels(test$cat89)))
 #hacked
 test$cat89[67038] <- "E"
 test$cat89[88842] <- "E"
+
+test$cat92[85977] <- "D"
+test$cat92[90191] <- "D"
+test$cat92[1770] <- "D"
+
+#relevel
+test <- test %>% mutate_each(funs(factor), starts_with("cat"))
 
 #fit <- TDboost(loss ~. , data=trainSet, cv.folds=5, n.trees=300, interaction.depth = 20)
 fit <- TDboost(loss ~. , data=trainSet, cv.folds=5, n.trees=100, interaction.depth = 20)
