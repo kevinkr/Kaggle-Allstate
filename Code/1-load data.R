@@ -8,6 +8,8 @@ source("Code/packages.R")
 train <- fread("Data/Raw/train.csv", stringsAsFactors=FALSE, header = TRUE)
 test <- fread("Data/Raw/test.csv", stringsAsFactors=FALSE, header = TRUE)
 
+# Harmonize factors
+
 #set test loss to NA
 test$loss <- NA
 
@@ -22,3 +24,5 @@ test <- fullSet[fullSet$isTest==1,]
 train <- fullSet[fullSet$isTest==0,]
 # drop loss from test set
 test$loss <- NULL
+test$isTest <- NULL
+train$isTest <- NULL
