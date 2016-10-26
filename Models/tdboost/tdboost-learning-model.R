@@ -7,6 +7,28 @@ source("Code/1-load data.R")
 #train <- train %>% mutate_each(funs(factor), starts_with("cat"))
 #test <- test %>% mutate_each(funs(factor), starts_with("cat"))
 
+# Harmonize factor levels
+for (attr in colnames(train))
+{
+  
+}
+
+# 
+# for(attr in colnames(training))
+# {
+#   if (is.factor(training[[attr]]))
+#   {
+#     new.levels <- setdiff(levels(training[[attr]]), levels(testing[[attr]]))
+#     if ( length(new.levels) == 0 )
+#     { print(paste(attr, '- no new levels')) }
+#     else
+#     {
+#       print(c(paste(attr, length(new.levels), 'of new levels, e.g.'), head(new.levels, 2)))
+#       levels(testing[[attr]]) <- union(levels(testing[[attr]]), levels(training[[attr]]))
+#     }
+#   }
+# }
+
 set.seed(3456)
 trainIndex <- createDataPartition(train$loss, p = 0.8, list=FALSE, times=1)
 subTrain <- train[trainIndex,]
