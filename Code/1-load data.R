@@ -23,6 +23,6 @@ fullSet <- fullSet %>% mutate_each(funs(factor), starts_with("cat"))
 test <- fullSet[fullSet$isTest==1,]
 train <- fullSet[fullSet$isTest==0,]
 # drop loss from test set
-test$loss <- NULL
-test$isTest <- NULL
-train$isTest <- NULL
+test <- subset(test, select = -c(loss))
+test <- subset(test, select = -c(isTest))
+train <- subset(train, select = -c(isTest))
