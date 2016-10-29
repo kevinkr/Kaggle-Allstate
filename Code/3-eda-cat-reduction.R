@@ -82,3 +82,36 @@ train[train$cat116 %in% weak.prop.names, "cat116"] <- "OTHER"
 
 # review as prop.table
 prop.table(table(train$cat116))
+
+
+
+######
+# category reduction fucntion
+######
+# inputs category name, cutoff value
+#
+reduce_cats <- function(cat.name, cutoff.val) {
+  prop.table <- sort(prop.table(table(train[,cat.name])), decreasing = T)
+  #return(prop.table)
+  weak.prop.table <- prop.table < cutoff.val
+  #return(weak.prop.table)
+  # grab the names
+  weak.prop.names <- names(prop.table[prop.table < 0.01])
+  return(weak.prop.names)
+  
+}
+
+# set up category name
+cat.name <- as.character("cat116")
+# call function to return category names for reduction, number is cutoff val
+weak.prop.names <- reduce_cats(cat.name, 0.01)
+
+# filter data set by categories that are in the weak prop names vector using %in% search'
+# first convert to character
+train[,cat.name] <- as.character(train[,cat.name])
+#train[train$cat116 %in% weak.prop.names, "cat116"] <- "OTHER"
+train[train[,cat.name] %in% weak.prop.names, cat.name] <- "OTHER"
+# review as prop.tables
+prop.table(table(train[,cat.name]))
+train[,cat.name] <- as.factor(train[,cat.name])
+str(train$cat116)
