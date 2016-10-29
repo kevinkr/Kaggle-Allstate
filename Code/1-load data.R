@@ -2,6 +2,8 @@
 # Start: 10-13-16
 
 #load packages
+options(scipen=999) # remove scientific notation
+
 source("Code/packages.R")
 
 #Load data

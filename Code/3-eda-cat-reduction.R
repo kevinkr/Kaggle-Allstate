@@ -68,56 +68,49 @@ sort(table(train$cat116), decreasing = T)
 # Phuc likes to have 1-5% of my data represented by a category
 
 # view as proportion
-options(scipen=999) # remove scientific notation
+
 prop.table <- sort(prop.table(table(train$cat116)), decreasing = T)
 # identify those category names with weak categories
 weak.prop.table <- prop.table < 0.01
 # grab the names
 weak.prop.names <- names(prop.table[prop.table < 0.01])
-
 # filter data set by categories that are in the weak prop names vector using %in% search'
 # first convert to character
 train$cat116 <- as.character(train$cat116)
 train[train$cat116 %in% weak.prop.names, "cat116"] <- "OTHER"
-
 # review as prop.table
 prop.table(table(train$cat116))
-
 
 
 ######
 # category reduction fucntion
 ######
 # inputs category name, cutoff value
-#
 reduce_cats <- function(cat.name, cutoff.val) {
-  prop.table <- sort(prop.table(table(train[,cat.name])), decreasing = T)
-  #return(prop.table)
+  prop.table <- sort(prop.table(table(train[[cat.name]])), decreasing = T)
+  #return(proptable)
   weak.prop.table <- prop.table < cutoff.val
   #return(weak.prop.table)
   # grab the names
   weak.prop.names <- names(prop.table[prop.table < 0.01])
   return(weak.prop.names)
-  
 }
 
-############continue here########
+############full loop attempt
 for (n in cat.var) {
-  
-  print(n)
+  #print(n)
+  # call function to return category names for reduction, number is cutoff val
+  #weak.prop.names <- reduce_cats(cat.name, 0.01)
+  weak.prop.names <- reduce_cats(n, 0.01)
+  # filter data set by categories that are in the weak prop names vector using %in% search'
+  # first convert to character
+  train[[n]] <- as.character(train[[n]])
+  train[train[[n]] %in% weak.prop.names, n] <- "OTHER"
+  train[[n]] <- as.factor(train[[n]])
 }
 
-# set up category name
-cat.name <- as.character("cat116")
-# call function to return category names for reduction, number is cutoff val
-weak.prop.names <- reduce_cats(cat.name, 0.01)
-
-# filter data set by categories that are in the weak prop names vector using %in% search'
-# first convert to character
-train[,cat.name] <- as.character(train[,cat.name])
-#train[train$cat116 %in% weak.prop.names, "cat116"] <- "OTHER"
-train[train[,cat.name] %in% weak.prop.names, cat.name] <- "OTHER"
 # review as prop.tables
-prop.table(table(train[,cat.name]))
+prop.table(table(train[,cat108]))
+
 train[,cat.name] <- as.factor(train[,cat.name])
-str(train$cat116)
+str(train$cat114)
