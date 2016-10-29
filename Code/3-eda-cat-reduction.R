@@ -101,6 +101,12 @@ reduce_cats <- function(cat.name, cutoff.val) {
   
 }
 
+############continue here########
+for (n in cat.var) {
+  
+  print(n)
+}
+
 # set up category name
 cat.name <- as.character("cat116")
 # call function to return category names for reduction, number is cutoff val
