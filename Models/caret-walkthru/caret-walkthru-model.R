@@ -3,19 +3,11 @@
 
 #load packages
 source("Code/packages.R")
+# follow load data, cat reduction pt1, pt2
 
 ################
 # test harness design
 ####################
-
-# load data
-train <- fread("Data/Raw/train.csv", stringsAsFactors=FALSE, header = TRUE)
-test <- fread("Data/Raw/test.csv", stringsAsFactors=FALSE, header = TRUE)
-
-# categorize
-train <- train %>% mutate_each(funs(factor), starts_with("cat"))
-test <- test %>% mutate_each(funs(factor), starts_with("cat"))
-
 
 
 ##########################################
@@ -25,32 +17,11 @@ trainIndex <- createDataPartition(train$loss, p = 0.8, list=FALSE, times=1)
 subTrain <- train[trainIndex,]
 subTest <- train[-trainIndex,]
 
+rm(trainIndex, subTrain, subTest, fullSet)
 
 # drop  id from trainSet
 trainSet <- subTrain[-c(1)]
 testSet <- subTest[-c(1)]
-
-
-# Simple tree model
-library(party)
-
-formula <- loss ~ .
-
-fit.ctree.party <- ctree(formula, data=trainSet,controls=ctree_control(mincriterion=0.95,savesplitstats=FALSE))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 # Test Options
@@ -88,7 +59,7 @@ set.seed(seed)
 fit.treebag <- train(Survived~., data=trainSet, method="treebag", metric=metric, trControl=control)
 # Random Forest
 set.seed(seed)
-fit.rf <- train(Survived~., data=trainSet, method="rf", metric=metric, trControl=control)
+fit.rf <- train(loss~., data=trainSet, method="rf", metric=metric, trControl=control)
 # Stochastic Gradient Boosting (Generalized Boosted Modeling)
 set.seed(seed)
 fit.gbm <- train(Survived~., data=trainSet, method="gbm", metric=metric, trControl=control, verbose=FALSE)
