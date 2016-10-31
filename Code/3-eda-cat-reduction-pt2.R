@@ -59,6 +59,35 @@ for (n in cat.var) {
   train[[n]] <- as.factor(train[[n]])
 }
 
+
+####
+# test version
+#####
+reduce_cats <- function(cat.name, cutoff.val) {
+  prop.table <- sort(prop.table(table(test[[cat.name]])), decreasing = T)
+  #return(proptable)
+  weak.prop.table <- prop.table < cutoff.val
+  #return(weak.prop.table)
+  # grab the names
+  weak.prop.names <- names(prop.table[prop.table < 0.01])
+  return(weak.prop.names)
+}
+
+############full loop attempt
+for (n in test.cat.var) {
+  #print(n)
+  # call function to return category names for reduction, number is cutoff val
+  #weak.prop.names <- reduce_cats(cat.name, 0.01)
+  weak.prop.names <- reduce_cats(n, 0.01)
+  # filter data set by categories that are in the weak prop names vector using %in% search'
+  # first convert to character
+  test[[n]] <- as.character(test[[n]])
+  test[test[[n]] %in% weak.prop.names, n] <- "OTHER"
+  test[[n]] <- as.factor(test[[n]])
+}
+
+
+
 # review as prop.tables
 prop.table(table(train[,cat108]))
 train[,cat.name] <- as.factor(train[,cat.name])
@@ -75,6 +104,10 @@ for (i in 1:ncol(train.cat)) {
        ylab = "Count", col="steelblue", las = 2)
 }
 
+for (i in 1:ncol(test.cat)) {
+  plot(test[[i]], main=colnames(test)[i],
+       ylab = "Count", col="steelblue", las = 2)
+}
 
 
 

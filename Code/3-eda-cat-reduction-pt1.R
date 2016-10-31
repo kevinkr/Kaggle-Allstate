@@ -12,11 +12,13 @@ str(test, list.len = 999)
 
 # Create lists of column names
 cat.var <- names(train)[which(sapply(train, is.factor))]
+test.cat.var <- names(test)[which(sapply(test, is.factor))]
 num.var <- names(train)[which(sapply(train, is.numeric))]
 num.var <- setdiff(num.var, c("id", "loss"))
 
 train.cat <- train[,.SD,.SDcols = cat.var]
 train.cat <- train[,1:116]
+test.cat <- test[,1:116]
 train.num <- train[, .SD, .SDcols = num.var]
 
 
@@ -41,6 +43,7 @@ str(subset$cat116)
 par(mfrow=c(1,1))
 boxplot(log(loss)~cat116, data=subset)
 
+# train version
 
 sorted_mean <- function(cat.name) {
   #print(cat.name)
@@ -108,6 +111,21 @@ levels(train$cat116)[levels(train$cat116)=="BP"] <- "FB"
 levels(train$cat116)[levels(train$cat116)=="JW"] <- "AC"
 levels(train$cat116)[levels(train$cat116)=="HN"] <- "L"
 
+
+levels(test$cat98)[levels(test$cat98)=="D"] <- "A"
+levels(test$cat109)[levels(test$cat109)=="BD"] <- "T"
+levels(test$cat110)[levels(test$cat110)=="DJ"] <- "AR"
+levels(test$cat111)[levels(test$cat111)=="O"] <- "M"
+levels(test$cat112)[levels(test$cat112)=="AY"] <- "AA"
+levels(test$cat112)[levels(test$cat112)=="X"] <- "M"
+levels(test$cat112)[levels(test$cat112)=="C"] <- "G"
+levels(test$cat113)[levels(test$cat113)=="AO"] <- "J"
+levels(test$cat115)[levels(test$cat115)=="N"] <- "K"
+levels(test$cat116)[levels(test$cat116)=="LO"] <- "MD"
+levels(test$cat116)[levels(test$cat116)=="EL"] <- "GI"
+levels(test$cat116)[levels(test$cat116)=="BP"] <- "FB"
+levels(test$cat116)[levels(test$cat116)=="JW"] <- "AC"
+levels(test$cat116)[levels(test$cat116)=="HN"] <- "L"
 
   # call function to return category names for reduction, number is cutoff val
   #weak.prop.names <- reduce_cats(cat.name, 0.01)
