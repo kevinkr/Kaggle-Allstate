@@ -66,4 +66,42 @@ model.lm <- lm(loss ~ cat1, data = train)
 summary(model.lm)
 
 
+#############################
+# Baseline model
+######################
+best.guess <- mean(subTrain$loss)
 
+# Evaluate RMSE abd MAE on the test data
+RMSE.baseline <- sqrt(mean(best.guess - subTest$loss)^2)
+RMSE.baseline
+
+
+MAE.baseline <- mean(abs(best.guess-subTest$loss))
+MAE.baseline
+
+lin.reg <-lm(log(loss) ~ cont1 + cont2 + cont3 +cont4 + cont5 + cont6 + cont7
+                + cont8 + cont9 + cont10 + cont11 + cont12 + cont13 + cont14, data=train)
+summary(lin.reg)
+
+test.pred.lin <- exp(predict(lin.reg,subTest))
+RMSE.lin.reg <- sqrt(mean(test.pred.lin - subTest$loss)^2)
+RMSE.lin.reg
+
+MAE.lin.reg <- mean(abs(test.pred.lin-subTest$loss))
+MAE.lin.reg
+
+
+lin.reg <-lm(log(loss) ~ cont1 + cont2 +cont4 + cont7
+             + cont8 + cont9 + cont10 + cont11 + cont12 + cont13 + cont14, data=train)
+summary(lin.reg)
+
+test.pred.lin <- exp(predict(lin.reg,subTest))
+RMSE.lin.reg <- sqrt(mean(test.pred.lin - subTest$loss)^2)
+RMSE.lin.reg
+
+MAE.lin.reg <- mean(abs(test.pred.lin-subTest$loss))
+MAE.lin.reg
+
+# Examine cont3 and cont4
+anova(lm(log(loss) ~ cont3 + cont5 + cont6, train))
+anova(lin.reg)
