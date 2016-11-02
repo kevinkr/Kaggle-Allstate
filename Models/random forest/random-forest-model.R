@@ -5,7 +5,7 @@
 source("Code/packages.R")
 
 ## load the library
-library(randomForest)
+
 par(mfrow=c(1,1))
 # follow load data, cat reduction pt1, pt2
 
@@ -43,12 +43,13 @@ testSet <- subTest[-c(1)]
 rm(trainIndex, subTrain, subTest, fullSet)
 
 ## Fit decision model to training set
-trainSet.rf.model <- randomForest(loss ~ ., 
+trainSet.rf.model <- randomForest(log(loss) ~ ., 
                                   data=trainSet, 
                                   importance=TRUE, 
                                   ntree=201,
-                                  nodesize = 1900,
-                                  proximity=F
+                                  nodesize = 1000,
+                                  mtry = 43,
+                                  proximity = FALSE
                                   )
 print(trainSet.rf.model)
 
@@ -62,9 +63,11 @@ varImpPlot(trainSet.rf.model)
 
 plot(trainSet.rf.model)
 
-
-finalTest <- test
-test$id <- NULL
+mean(trainSet.rf.model == testSet$loss)
 
 
 test$loss <- predict(trainSet.rf.model, test)
+solution <- data.frame(id = test$id, loss = exp(test$loss))
+
+# Write the solution to file
+write.csv(solution, file = 'Submissions/rf-v3-110316.csv', row.names = F)

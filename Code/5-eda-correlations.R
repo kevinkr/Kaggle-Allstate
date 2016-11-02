@@ -56,11 +56,16 @@ mytable <- xtabs(~cat1+cat110, data=train.cat)
 ftable(mytable) # print table 
 summary(mytable) # chi-square test of indepedenc
 
+cor(train$cat5,train$cat2, method="kendall")
+
+
+
+
 
 
 
 ###############################
-# Correlations of loss vs. categorical
+# Correlations of loss vs. continuous
 #############################
 model.lm <- lm(loss ~ cat1, data = train)
 summary(model.lm)
