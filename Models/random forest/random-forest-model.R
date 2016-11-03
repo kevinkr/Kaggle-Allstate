@@ -58,6 +58,16 @@ var.imp <- data.frame(importance(trainSet.rf.model, type=1))
 var.imp$Variables <- row.names(var.imp)
 # make row names as columns
 var.imp[order(var.imp$Variables, decreasing = T),]
+var.imp[order(var.imp, decreasing = T),]
+
+
+# Variable Importance Table
+var.imp <- data.frame(importance(trainSet.rf.model, type=2))
+var.imp$Variables <- row.names(var.imp)
+# make row names as columns
+var.imp[order(var.imp$Variables, decreasing = T),]
+var.imp[order(var.imp, decreasing = T),]
+
 
 varImpPlot(trainSet.rf.model)
 
