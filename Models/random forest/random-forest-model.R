@@ -54,10 +54,10 @@ trainSet.rf.model <- randomForest(log(loss) ~ .,
 print(trainSet.rf.model)
 
 # Variable Importance Table
-var.imp <- data.frame(importance(trainSet.rf.model, type=2))
-# make row names as columns
+var.imp <- data.frame(importance(trainSet.rf.model, type=1))
 var.imp$Variables <- row.names(var.imp)
-#var.imp[order(var.imp$MeanDecreaseGini,decreasing = T),]
+# make row names as columns
+var.imp[order(var.imp$Variables, decreasing = T),]
 
 varImpPlot(trainSet.rf.model)
 
