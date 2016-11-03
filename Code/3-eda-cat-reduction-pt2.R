@@ -42,7 +42,7 @@ reduce_cats <- function(cat.name, cutoff.val) {
   weak.prop.table <- prop.table < cutoff.val
   #return(weak.prop.table)
   # grab the names
-  weak.prop.names <- names(prop.table[prop.table < 0.01])
+  weak.prop.names <- names(prop.table[prop.table < cutoff.val])
   return(weak.prop.names)
 }
 
@@ -69,7 +69,7 @@ reduce_cats <- function(cat.name, cutoff.val) {
   weak.prop.table <- prop.table < cutoff.val
   #return(weak.prop.table)
   # grab the names
-  weak.prop.names <- names(prop.table[prop.table < 0.01])
+  weak.prop.names <- names(prop.table[prop.table < cutoff.val])
   return(weak.prop.names)
 }
 
@@ -108,15 +108,6 @@ for (i in 1:ncol(test.cat)) {
   plot(test[[i]], main=colnames(test)[i],
        ylab = "Count", col="steelblue", las = 2)
 }
-
-
-
-
-
-
-
-
-
 
 
 
