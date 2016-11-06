@@ -58,12 +58,40 @@ summary(mytable) # chi-square test of indepedenc
 
 cor(train$cat5,train$cat2, method="kendall")
 
+library(GoodmanKruskal)
+GKtau(train$cat1,train$cat2)
+
+Frame1 <- subset(train, select = c(cat1:cat10,cat41:cat50))
+GKmatrix1 <- GKtauDataframe(Frame1)
+plot(GKmatrix1)
 
 
+Frame1 <- subset(train, select = c(cat11:cat20))
+GKmatrix1 <- GKtauDataframe(Frame1)
+plot(GKmatrix1)
+
+Frame1 <- subset(train, select = c(cat21:cat30))
+GKmatrix1 <- GKtauDataframe(Frame1)
+plot(GKmatrix1)
+
+Frame1 <- subset(train, select = c(cat31:cat50))
+GKmatrix1 <- GKtauDataframe(Frame1)
+plot(GKmatrix1)
+
+Frame1 <- subset(train, select = c(cat51:cat70))
+GKmatrix1 <- GKtauDataframe(Frame1)
+plot(GKmatrix1)
+
+Frame1 <- subset(train, select = c(cat71:cat90))
+GKmatrix1 <- GKtauDataframe(Frame1)
+plot(GKmatrix1)
 
 
+Frame1 <- subset(train, select = c(cat91:cat116))
+GKmatrix1 <- GKtauDataframe(Frame1)
+plot(GKmatrix1)
 
-
+levels(train$cat103)
 ###############################
 # Correlations of loss vs. continuous
 #############################
