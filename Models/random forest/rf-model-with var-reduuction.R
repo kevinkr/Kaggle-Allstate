@@ -52,12 +52,24 @@ set.seed(212312)
 
 ## Fit decision model to training set
 trainSet.rf.model <- randomForest(x=train, 
-                                  y=loss, 
-                                  importance=TRUE, 
-                                  ntree=201,
+                                  y=loss,
+                                  nodesize=49,
+                                  importance=TRUE,
                                   do.trace=TRUE,
                                   proximity = FALSE
                                   )
+
+
+library(ranger)
+trainSet.rf.model <-ranger(loss~.,
+                            data=train, 
+                            write.forest=TRUE,
+                            importance = impurity,
+                            respect.unordered.factors=TRUE)
+
+
+
+
 print(trainSet.rf.model)
 # predictions (now to compare??)
 testSet.pred <- predict(trainSet.rf.model, testSet)
