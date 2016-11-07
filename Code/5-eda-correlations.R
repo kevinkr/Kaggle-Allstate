@@ -202,6 +202,88 @@ alias(model.lm)
 summary(model.lm)$coefficients[,4]
 summary(model.lm)$r.squared
 
+# R2 
+rsq <- summary(model.lm)$r.squared
+rsq
+sqrt(rsq)
+# This isn't the correlation. What it actually represents is the correlation between 
+# the observed durations, and the ones predicted (fitted) by our model.
+
+# Just to check, the Pearson correlation between observed and fitted values is
+cor(cat115$loss, model.lm$fitted)
+
+# Visualize on a scatter plot
+plot(x = model.lm$fitted, y = cat115$loss,
+     xlab = "Fitted loss", ylab = "Observed loss")
+abline(lm(cat115$loss ~ model.lm$fitted), col="red")
+
+
+#######################
+######################## cat114
+boxplot(log(loss) ~ cat114, data = train, ylab = "Duration of conversation")
+
+# Create dummy variables
+# create subset 
+cat114 <- subset(train, select = c(loss,cat114))
+
+cat114 <- dummy.data.frame(cat114, names=c("cat114"), sep="_")
+
+model.lm <- lm(loss ~ ., data = cat114)
+summary(model.lm)
+alias(model.lm)
+# get pvalues example - http://stackoverflow.com/questions/5587676/pull-out-p-values-and-r-squared-from-a-linear-regression
+summary(model.lm)$coefficients[,4]
+summary(model.lm)$r.squared
+
+# R2 
+rsq <- summary(model.lm)$r.squared
+rsq
+sqrt(rsq)
+# This isn't the correlation. What it actually represents is the correlation between 
+# the observed durations, and the ones predicted (fitted) by our model.
+
+# Just to check, the Pearson correlation between observed and fitted values is
+cor(cat114$loss, model.lm$fitted)
+
+# Visualize on a scatter plot
+plot(x = model.lm$fitted, y = cat114$loss,
+     xlab = "Fitted loss", ylab = "Observed loss")
+abline(lm(cat114$loss ~ model.lm$fitted), col="red")
+
+#######################
+######################## cat113
+boxplot(log(loss) ~ cat113, data = train, ylab = "Duration of conversation")
+
+# Create dummy variables
+# create subset 
+cat113 <- subset(train, select = c(loss,cat113))
+
+cat113 <- dummy.data.frame(cat113, names=c("cat113"), sep="_")
+
+model.lm <- lm(loss ~ ., data = cat113)
+summary(model.lm)
+alias(model.lm)
+# get pvalues example - http://stackoverflow.com/questions/5587676/pull-out-p-values-and-r-squared-from-a-linear-regression
+summary(model.lm)$coefficients[,4]
+summary(model.lm)$r.squared
+
+# R2 
+rsq <- summary(model.lm)$r.squared
+rsq
+sqrt(rsq)
+# This isn't the correlation. What it actually represents is the correlation between 
+# the observed durations, and the ones predicted (fitted) by our model.
+
+# Just to check, the Pearson correlation between observed and fitted values is
+cor(cat113$loss, model.lm$fitted)
+
+# Visualize on a scatter plot
+plot(x = model.lm$fitted, y = cat113$loss,
+     xlab = "Fitted loss", ylab = "Observed loss")
+abline(lm(cat113$loss ~ model.lm$fitted), col="red")
+
+
+
 # if NA in results, Some of the variables are not defined because of singularity 
 # means that the variables are not linearly independent. If you remove the variables 
 # that are giving NA in the above summary, you will obtain the same result for the 
