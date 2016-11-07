@@ -53,7 +53,7 @@ cor(train$cat5,train$cat2, method="kendall")
 library(GoodmanKruskal)
 GKtau(train$cat1,train$cat2)
 
-Frame1 <- subset(train, select = c(cat1:cat10,cat41:cat50))
+Frame1 <- subset(train, select = c(cat41:cat50,cat81:cat90))
 GKmatrix1 <- GKtauDataframe(Frame1)
 plot(GKmatrix1)
 
