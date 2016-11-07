@@ -291,6 +291,7 @@ abline(lm(cat113$loss ~ model.lm$fitted), col="red")
 # is already contained in the other variables and thus redundant.
 
 
+
 # Also
 lmp <- function (modelobject) {
   if (class(modelobject) != "lm") stop("Not an object of class 'lm' ")
