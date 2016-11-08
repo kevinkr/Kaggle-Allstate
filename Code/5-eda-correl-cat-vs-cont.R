@@ -158,8 +158,6 @@ par(mfrow=c(1,1))
 ##############################
 # Function
 ##############################
-
-
 myplot = function(df, x_string, y_string, z_string) {
   p1 <- ggplot(df, aes_string(x = x_string, y = y_string)) + geom_boxplot() 
   p2 <- ggplot(df, aes_string(x = x_string, y = z_string)) + geom_boxplot() 
@@ -169,26 +167,42 @@ myplot = function(df, x_string, y_string, z_string) {
 lm_cats <- function(cat.name) {
   #print(cat.name)
   # plot first
-  myplot(train.cat, cat.name, "loss", "logloss")
+  #myplot(train, cat.name, "loss", "logloss")
   # add save command
   
   # create subset and one hot encoded variables
-  df <- subset(train, select = c(loss,cat113))
+  myvars <- names(train) %in% c("loss", cat.name) 
+  df <- train[myvars]
+  df <- dummy.data.frame(df, names=c(cat.name), sep="_")
   
-  cat113 <- dummy.data.frame(cat113, names=c("cat113"), sep="_")
+  model.lm <- lm(loss ~ ., data = df)
+  summary(model.lm)
+  # get pvalues example - http://stackoverflow.com/questions/5587676/pull-out-p-values-and-r-squared-from-a-linear-regression
+  summary(model.lm)$coefficients[,4]
+  summary(model.lm)$r.squared
+  
+  # R2 
+  rsq <- summary(model.lm)$r.squared
+  rsq
+  sqrt(rsq)
+  # This isn't the correlation. What it actually represents is the correlation between 
+  # the observed durations, and the ones predicted (fitted) by our model.
+  
+  # Just to check, the Pearson correlation between observed and fitted values is
+  cor(df$loss, model.lm$fitted)
+  
+  # Visualize on a scatter plot
+
+  ggplot(data=data.frame(x = model.lm$fitted, y = df$loss), aes(x,y)) + geom_point() + stat_smooth(method = "lm", col = "red")
 }
 
+lm_cats_graph <- function(cat.name) {
+  #print(cat.name)
+  # plot first
+  myplot(train, cat.name, "loss", "logloss")
+}
+lm_cats_graph("cat1")
 lm_cats("cat1")
-
-
-p <- ggplot(train, aes(x=cat1, y=loss)) + 
-  geom_boxplot()
-
-p
-
-
-
-
 
 
 

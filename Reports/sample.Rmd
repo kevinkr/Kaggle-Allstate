@@ -1,0 +1,141 @@
+---
+title: "pritn test"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+```{r function, echo=FALSE}
+# Multiple plot function
+#
+# ggplot objects can be passed in ..., or to plotlist (as a list of ggplot objects)
+# - cols:   Number of columns in layout
+# - layout: A matrix specifying the layout. If present, 'cols' is ignored.
+#
+# If the layout is something like matrix(c(1,2,3,3), nrow=2, byrow=TRUE),
+# then plot 1 will go in the upper left, 2 will go in the upper right, and
+# 3 will go all the way across the bottom.
+#
+multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
+  library(grid)
+  
+  # Make a list from the ... arguments and plotlist
+  plots <- c(list(...), plotlist)
+  
+  numPlots = length(plots)
+  
+  # If layout is NULL, then use 'cols' to determine layout
+  if (is.null(layout)) {
+    # Make the panel
+    # ncol: Number of columns of plots
+    # nrow: Number of rows needed, calculated from # of cols
+    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
+                     ncol = cols, nrow = ceiling(numPlots/cols))
+  }
+  
+  if (numPlots==1) {
+    print(plots[[1]])
+    
+  } else {
+    # Set up the page
+    grid.newpage()
+    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
+    
+    # Make each plot, in the correct location
+    for (i in 1:numPlots) {
+      # Get the i,j matrix positions of the regions that contain this subplot
+      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
+      
+      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
+                                      layout.pos.col = matchidx$col))
+    }
+  }
+}
+```
+
+```{r load data, echo=FALSE}
+library(data.table)
+library(dplyr)
+library(dummies)
+library(ggplot2)
+#Load data
+train <- fread("C:/Users/kruegkj/Documents/GitHub/kaggle-allstate/Data/Raw/train.csv", stringsAsFactors=FALSE, header = TRUE)
+test <- fread("C:/Users/kruegkj/Documents/GitHub/kaggle-allstate/Data/Raw/test.csv", stringsAsFactors=FALSE, header = TRUE)
+
+  test$loss <- NA
+  
+  test$isTest <- rep(1,nrow(test))
+  train$isTest <- rep(0,nrow(train))
+  #bind train and test
+  fullSet <- rbind(test,train)
+  # set factor levels all full set
+  fullSet <- fullSet %>% mutate_each(funs(factor), starts_with("cat"))
+  # split back into test and train
+  test <- fullSet[fullSet$isTest==1,]
+  train <- fullSet[fullSet$isTest==0,]
+  # drop loss from test set
+  test <- subset(test, select = -c(loss))
+  test <- subset(test, select = -c(isTest))
+  train <- subset(train, select = -c(isTest))
+  
+  train$logloss <- log(train$loss+1)
+  
+  
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r plots, echo=FALSE}
+##############################
+# Function
+##############################
+myplot = function(df, x_string, y_string, z_string) {
+  p1 <- ggplot(df, aes_string(x = x_string, y = y_string)) + geom_boxplot() 
+  p2 <- ggplot(df, aes_string(x = x_string, y = z_string)) + geom_boxplot() 
+  multiplot(p1, p2, cols=1)
+}
+
+lm_cats <- function(cat.name) {
+  print(cat.name)
+  # plot first
+  return(myplot(train, cat.name, "loss", "logloss"))
+  # create subset and one hot encoded variables
+  myvars <- names(train) %in% c("loss", cat.name) 
+  df <- train[myvars]
+  df <- dummy.data.frame(df, names=c(cat.name), sep="_")
+  
+  model.lm <- lm(loss ~ ., data = df)
+  summary(model.lm)
+  # get pvalues example - http://stackoverflow.com/questions/5587676/pull-out-p-values-and-r-squared-from-a-linear-regression
+  summary(model.lm)$coefficients[,4]
+  summary(model.lm)$r.squared
+  
+  # R2 
+  rsq <- summary(model.lm)$r.squared
+  rsq
+  sqrt(rsq)
+  # This isn't the correlation. What it actually represents is the correlation between 
+  # the observed durations, and the ones predicted (fitted) by our model.
+  
+  # Just to check, the Pearson correlation between observed and fitted values is
+  cor(df$loss, model.lm$fitted)
+  
+  # Visualize on a scatter plot
+  plot(x = model.lm$fitted, y = df$loss,
+       xlab = "Fitted loss", ylab = "Observed loss")
+  abline(lm(df$loss ~ model.lm$fitted), col="red")
+}
+
+lm_cats("cat1")
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
