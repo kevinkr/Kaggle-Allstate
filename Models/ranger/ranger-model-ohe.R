@@ -41,23 +41,17 @@ test <- subset(test, select = -c(loss))
 test <- subset(test, select = -c(isTest))
 train <- subset(train, select = -c(isTest))
 train$loss <- log(train$loss + 1)
+
 #temporary
-loss <- train$loss
-train <- subset(train, select = -c(loss))
+
+#ohe
+library(dummies)
+train <- dummy.data.frame(train, names=cat.var, sep="_")
+test <- dummy.data.frame(test, names=test.cat.var,sep="_")
 
 ##########################################
 # Create split train set . . . RF, not splitting
 set.seed(212312)
-
-
-## Fit decision model to training set
-trainSet.rf.model <- randomForest(x=train, 
-                                  y=loss,
-                                  nodesize=49,
-                                  importance=TRUE,
-                                  do.trace=TRUE,
-                                  proximity = FALSE
-                                  )
 
 
 library(ranger)
