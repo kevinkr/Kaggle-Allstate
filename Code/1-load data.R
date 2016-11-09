@@ -4,8 +4,6 @@
 #load packages
 options(scipen=999) # remove scientific notation
 
-source("Code/packages.R")
-
 #Load data
 train <- fread("Data/Raw/train.csv", stringsAsFactors=FALSE, header = TRUE)
 test <- fread("Data/Raw/test.csv", stringsAsFactors=FALSE, header = TRUE)
@@ -29,3 +27,5 @@ test <- fread("Data/Raw/test.csv", stringsAsFactors=FALSE, header = TRUE)
   test <- subset(test, select = -c(loss))
   test <- subset(test, select = -c(isTest))
   train <- subset(train, select = -c(isTest))
+  
+  train$logloss <- log(train$loss+1)
