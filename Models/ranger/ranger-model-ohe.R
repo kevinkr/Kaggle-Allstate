@@ -58,6 +58,7 @@ library(ranger)
 trainSet.rf.model <-ranger(loss~.,
                             data=train, 
                             write.forest=TRUE,
+                           num.trees =5000,
                             importance = "impurity",
                             respect.unordered.factors=TRUE)
 
