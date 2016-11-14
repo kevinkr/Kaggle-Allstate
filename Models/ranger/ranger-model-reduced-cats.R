@@ -23,13 +23,6 @@ fullSet <- subset(fullSet, select = -c(cont3, cont5, cont6))
 fullSet <- subset(fullSet, select = -c(cat7 , cat14 , cat15 , cat16 , cat17 , cat18 , cat19 , cat20 , cat21 , cat22 , cat24 , cat28 , cat29 , cat30 , cat31 , cat32 , cat33 , cat34 , cat35 , cat39 , cat40 , cat41 , cat42 , cat43 , cat45 , cat46 , cat47 , cat48 , cat49 , cat51 , cat52 , cat54 , cat55 , cat56 , cat57 , cat58 , cat59 , cat60 , cat61 , cat62 , cat63 , cat64 , cat65 , cat66 , cat67 , cat68 , cat69 , cat70 , cat74 , cat76 , cat77 , cat78 , cat85 , cat89 , cat96 , cat102))
 # set factor levels all full set
 fullSet <- fullSet %>% mutate_each(funs(factor), starts_with("cat"))
-fullSet.cat.var <- names(fullSet)[which(sapply(fullSet, is.factor))]
-#ohe
-library(dummies)
-#train <- dummy.data.frame(train, names=cat.var, sep="_")
-#test <- dummy.data.frame(test, names=test.cat.var,sep="_")
-fullSet <- dummy.data.frame(fullSet, names=fullSet.cat.var, sep="_")
-
 
 # nzv (skip)
 library(caret)
@@ -58,7 +51,6 @@ library(ranger)
 trainSet.rf.model <-ranger(loss~.,
                             data=train, 
                             write.forest=TRUE,
-                           num.trees =2000,
                             importance = "impurity",
                             respect.unordered.factors=TRUE)
 
@@ -107,4 +99,4 @@ loss <- losspred$predictions
 solution <- data.frame(id = test$id, loss = exp(loss) - 1)
 
 # Write the solution to file
-write.csv(solution, file = 'Submissions/ranger-v3-111116.csv', row.names = F)
+write.csv(solution, file = 'Submissions/ranger-v4-111016.csv', row.names = F)
