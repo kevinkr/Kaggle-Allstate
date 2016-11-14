@@ -29,15 +29,15 @@ str(test, list.len = 999)
 
 
 # Create lists of column names
-cat.var <- names(train)[which(sapply(train, is.factor))]
+cat.var <- names(train)[which(sapply(train, is.character))]
 num.var <- names(train)[which(sapply(train, is.numeric))]
 num.var <- setdiff(num.var, c("id", "loss"))
 
 # split off categorical and numerical columns
 train.cat <- train[,.SD,.SDcols = cat.var]
 train.cat <- train[,1:117]
-train.num <- train[, .SD, .SDcols = num.var]
-train.num <- train[,118:131]
+train.num <- as.data.frame(train[, .SD, .SDcols = num.var])
+train.num <- train[c(118:131)]
 
 
 ########################
@@ -275,9 +275,10 @@ panel.cor <- function(x, y, digits=2, prefix="", cex.cor)
 
 pairs(train.num, lower.panel=panel.smooth, upper.panel=panel.cor)
 
+library(ggplot2)
+library(GGally)
+ggpairs(~ loss + cont1 + cont2 + cont3, data = train, main = "Continuous scatter plot")
 
-#pairs(~ loss + cont1 + cont2 + cont3, data = train, main = "Continuous scatter plot")
 
-library(lattice)
-splom(train.num[1:6,], auto.key = TRUE )
+
 

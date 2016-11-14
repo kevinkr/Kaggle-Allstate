@@ -18,7 +18,7 @@ num.var <- setdiff(num.var, c("id", "loss"))
 train.cat <- train[,.SD,.SDcols = cat.var]
 train.cat <- train[,1:117]
 train.num <- train[, .SD, .SDcols = num.var]
-train.num <- train[,118:131]
+train.num <- train[c(118:131)]
 
 
 #######################

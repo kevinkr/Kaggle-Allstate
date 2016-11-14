@@ -31,12 +31,15 @@ library(psych)
 library(factoextra)
 library(glmnet)
 library(caret)
-library(data.table)
+
 library("dplyr")
 library(TDboost)
 library(HDtweedie)
 
-#parallel computing
-#install.packages("doMC", dependencies = TRUE)
-#require(doMC)
+# if(!require(dplyr)){install.packages("dplyr")}
+# if(!require(FSA)){install.packages("FSA")}
+# if(!require(DescTools)){install.packages("DescTools")}
+# if(!require(rcompanion)){install.packages("rcompanion")}
+# if(!require(multcompView)){install.packages("multcompView")}
+
 

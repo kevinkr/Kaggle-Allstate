@@ -6,6 +6,13 @@ source("Code/packages.R")
 source("Code/1-load data.R")
 source("Code/2-plot functions.R")
 
+cat.var <- names(train)[which(sapply(train, is.factor))]
+num.var <- names(train)[which(sapply(train, is.numeric))]
+num.var <- setdiff(num.var, c("id", "loss"))
+
+train.cat <- train[,.SD,.SDcols = cat.var]
+train.num <- train[, .SD, .SDcols = num.var]
+
 
 ###############################################
 # Analyze outliers
@@ -27,8 +34,8 @@ outliers <- train[train$loss > upper.outer.fence,]
 outlier.index <- which(train$loss > upper.outer.fence)
 notoutliers <- train[-outlier.index]
 
-outliers.cat <- outliers[,.SD,.SDcols = cat.var]
-outliers.num <- outliers[, .SD, .SDcols = num.var]
+outliers.num <- as.data.frame(outliers[, .SD, .SDcols = num.var])
+notoutliers.num <- as.data.frame(notoutliers[, .SD, .SDcols = num.var])
 
 plot(outliers$loss)
 hist(log(outliers$loss),100)

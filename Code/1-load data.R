@@ -5,6 +5,7 @@
 options(scipen=999) # remove scientific notation
 
 #Load data
+library(data.table)
 train <- fread("Data/Raw/train.csv", stringsAsFactors=FALSE, header = TRUE)
 test <- fread("Data/Raw/test.csv", stringsAsFactors=FALSE, header = TRUE)
 
