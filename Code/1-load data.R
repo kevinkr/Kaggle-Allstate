@@ -21,6 +21,7 @@ test <- fread("Data/Raw/test.csv", stringsAsFactors=FALSE, header = TRUE)
   fullSet <- rbind(test,train)
   # set factor levels all full set
   fullSet <- fullSet %>% mutate_each(funs(factor), starts_with("cat"))
+  fullSet <- subset(fullSet, select =-c(cont1,cont6,cont11,cont10))
   # split back into test and train
   test <- fullSet[fullSet$isTest==1,]
   train <- fullSet[fullSet$isTest==0,]
@@ -29,4 +30,4 @@ test <- fread("Data/Raw/test.csv", stringsAsFactors=FALSE, header = TRUE)
   test <- subset(test, select = -c(isTest))
   train <- subset(train, select = -c(isTest))
   
-  train$logloss <- log(train$loss+1)
+  #train$logloss <- log(train$loss+1)
