@@ -9,6 +9,9 @@ options(scipen=999) # remove scientific notation
 train <- fread("Data/Raw/train.csv", stringsAsFactors=FALSE, header = TRUE)
 test <- fread("Data/Raw/test.csv", stringsAsFactors=FALSE, header = TRUE)
 
+# Drop cont columns 1, 6, 10, 11
+train <- subset(train, select =-c(cont1,cont6,cont11,cont10))
+test <- subset(test, select =-c(cont1,cont6,cont11,cont10))
 # Harmonize factors
 #set test loss to NA
 test$loss <- NA
@@ -206,5 +209,5 @@ solution <- data.frame(id = test$id, "loss" = loss)
 colnames(solution) <- c("id","loss")
 
 # Write the solution to file
-write.csv(solution, file = 'Submissions/mlr-ranger-v4-111116.csv', row.names = F)
+write.csv(solution, file = 'Submissions/mlr-ranger-v5-111416.csv', row.names = F)
 
