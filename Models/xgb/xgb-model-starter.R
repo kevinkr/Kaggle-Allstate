@@ -10,7 +10,6 @@ library(Metrics)
 
 ID = 'id'
 TARGET = 'loss'
-SEED = 0
 
 TRAIN_FILE = "Data/Raw/train.csv"
 TEST_FILE = "Data/Raw/test.csv"
@@ -48,7 +47,6 @@ dtest = xgb.DMatrix(as.matrix(x_test))
 
 
 xgb_params = list(
-  seed = 0,
   colsample_bytree = 0.7,
   subsample = 0.7,
   eta = 0.075,
@@ -65,11 +63,12 @@ xg_eval_mae <- function (yhat, dtrain) {
   return (list(metric = "error", value = err))
 }
 
+set.seed(123)
 res = xgb.cv(xgb_params,
              dtrain,
-             nrounds=750,
+             nrounds=500, #was 750
              nfold=4,
-             early_stopping_rounds=15,
+             early_stopping_rounds=5,
              print_every_n = 10,
              verbose= 1,
              feval=xg_eval_mae,
