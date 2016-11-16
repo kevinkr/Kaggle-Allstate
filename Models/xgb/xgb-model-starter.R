@@ -47,11 +47,13 @@ dtest = xgb.DMatrix(as.matrix(x_test))
 
 
 xgb_params = list(
-  colsample_bytree = 0.7,
+  colsample_bytree = 0.5,
   subsample = 0.7,
-  eta = 0.075,
+  eta = 0.01,
+  alpha = 1,
+  gamma = 1,
   objective = 'reg:linear',
-  max_depth = 6,
+  max_depth = 12,
   num_parallel_tree = 1,
   min_child_weight = 1,
   base_score = 7
@@ -66,9 +68,9 @@ xg_eval_mae <- function (yhat, dtrain) {
 set.seed(123)
 res = xgb.cv(xgb_params,
              dtrain,
-             nrounds=500, #was 750
+             nrounds=5000,
              nfold=4,
-             early_stopping_rounds=5,
+             early_stopping_rounds=25,
              print_every_n = 10,
              verbose= 1,
              feval=xg_eval_mae,
@@ -83,6 +85,6 @@ gbdt = xgb.train(xgb_params, dtrain, best_nrounds)
 
 submission = fread(SUBMISSION_FILE, colClasses = c("integer", "numeric"))
 submission$loss = exp(predict(gbdt,dtest))
-write.csv(submission,'xgb_starter_v2.sub.csv',row.names = FALSE)
+write.csv(submission,file = 'Submissions/xgb-faron-starter-v3-111616.csv',row.names = FALSE)
 
 #1126.19439 on PLB
