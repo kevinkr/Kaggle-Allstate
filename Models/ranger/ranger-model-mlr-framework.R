@@ -30,7 +30,7 @@ train <- fullSet[fullSet$isTest==0,]
 test <- subset(test, select = -c(loss))
 test <- subset(test, select = -c(isTest))
 train <- subset(train, select = -c(isTest))
-train$loss <- log(train$loss + 1)
+#train$loss <- log(train$loss + 1)
 rm(fullSet)
 
 cat.var <- names(train)[which(sapply(train, is.factor))]
@@ -86,7 +86,7 @@ train <- fullSet[fullSet$isTest==0,]
 test <- subset(test, select = -c(loss))
 test <- subset(test, select = -c(isTest))
 train <- subset(train, select = -c(isTest))
-train$loss <- log(train$loss + 1)
+#train$loss <- log(train$loss + 1)
 rm(fullSet)
 
 ######
@@ -161,53 +161,65 @@ train <- fullSet[fullSet$isTest==0,]
 test <- subset(test, select = -c(loss))
 test <- subset(test, select = -c(isTest))
 train <- subset(train, select = -c(isTest))
-train$loss <- log(train$loss + 1)
+train$loss = log(train$loss + 200)
 rm(fullSet)
 
 ##########################################
 # Create split train set . . . RF, not splitting
 set.seed(212312)
 
-
-library(ranger)
-trainSet.rf.model <-ranger(loss~.,
-                            data=train, 
-                            write.forest=TRUE,
-                            ntrees = 1000,
-                           
-                            importance = "impurity",
-                            respect.unordered.factors=TRUE)
-
-
 ##########mlr
 library(mlr)
 library(mlbench)
 regr.task = makeRegrTask(id = "trainreg", data = train, target = "loss", weights = NULL, blocking = NULL, fixup.data = "warn", check.data = FALSE)
-regr.task
 
+learner <- makeLearner("regr.ranger")
+
+# Choose resampling strategy and define grid
+rdesc <- makeResampleDesc("CV", iters = 5)
+
+# Extract the variable importance in a regression tree
+r = resample("regr.ranger", regr.task, rdesc,
+             extract = function(x) x$learner.model$variable.importance)
+$r$extract
+
+ps <- makeParamSet(makeIntegerParam("mtry", 3, 11),
+                   makeDiscreteParam("num.trees", 500))
+
+# Tune
+res = tuneParams(learner, regr.task, rdesc, par.set = ps,
+                 control = makeTuneControlGrid())
+
+# Train on entire dataset (using best hyperparameters)
+lrn = setHyperPars(makeLearner("regr.ranger"), par.vals = res$x)
+mod = train(lrn, regr.task)
+
+
+# caluclate performance 
 n = getTaskSize(regr.task)
-train.set = seq(1, n, by = 2)
-test.set = seq(2, n, by = 2)
+# do I need to do the next two steps if using CV
+#mod = train(lrn, task = regr.task, subset = seq(1, n, 2))
+pred = predict(mod, task = regr.task, subset = seq(2, n, 2))
+pred
+performance(pred, measures = list(mse, medse, mae))
+summary(pred)
 
 ## Train the learner
-mod = train("regr.ranger", regr.task, subset = train.set)
-mod
-
-#predict on test Set
-task.pred = predict(mod, task = regr.task, subset = test.set)
-task.pred
-
-performance(task.pred, measures = list(mse, medse, mae))
+#mod = train("regr.ranger", regr.task, subset = train)
+#mod
 
 
 
+# predict on new data
 predict = predict(mod, newdata = test)
 predict
 
-loss <- exp(as.data.frame(predict)-1)
+loss <- as.data.frame(predict)
+#loss <- exp(loss)
+#loss <- exp(as.data.frame(predict)-1)
 solution <- data.frame(id = test$id, "loss" = loss)
 colnames(solution) <- c("id","loss")
 
 # Write the solution to file
-write.csv(solution, file = 'Submissions/mlr-ranger-v5-111416.csv', row.names = F)
+write.csv(solution, file = 'Submissions/mlr-ranger-v7-112116.csv', row.names = F)
 
