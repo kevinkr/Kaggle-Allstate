@@ -96,6 +96,13 @@ mae.log$fun = function (task, model, pred, feats, extra.args) {
   measureMAE(exp(pred$data$truth), exp(pred$data$response))
 }
 
+logcoshobj <- function(preds, dtrain) {
+  labels <- getinfo(dtrain, "label")
+  grad <- tanh(preds-labels)
+  hess <- 1-grad*grad
+  return(list(grad = grad, hess = hess))
+}
+
 # create mlr train and test task
 trainTask = makeRegrTask(data = as.data.frame(train), target = "loss")
 testTask = makeRegrTask(data = as.data.frame(test), target = "loss")
@@ -114,7 +121,8 @@ lrn = setHyperPars(lrn,
   nrounds = 500,
   eta = 0.1,
   print_every_n = 50,
-  eval_metric = mae.log
+  eval_metric = mae.log,
+  objective = logcoshobj, #fairobj #logcoshobj, #cauchyobj #,#'reg:linear',
 )
 
 ## This is how you could do hyperparameter tuning with random search
@@ -131,8 +139,12 @@ ctrl =  makeTuneControlRandom(maxit = 5)
 
 # 4) now use the learner on the training Task with the 3-fold CV to optimize your set of parameters in parallel
 #parallelStartMulticore(5)
-res = tuneParams(lrn, task = trainTask, resampling = rdesc,
-  par.set = ps, control = ctrl, measures = mae.log)
+#res = tuneParams(lrn, task = trainTask, resampling = rdesc,
+#  par.set = ps, control = ctrl)
+
+res = tuneParams(learner, trainTask, resampling = rdesc, par.set = ps,
+                 control = makeTuneControlGrid())
+
 #parallelStop()
  res$x
 
