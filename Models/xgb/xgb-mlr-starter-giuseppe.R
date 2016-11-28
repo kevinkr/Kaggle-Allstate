@@ -11,17 +11,18 @@ makeRLearner.regr.xgboost.latest = function() {
     cl = "regr.xgboost.latest",
     package = "xgboost",
     par.set = makeParamSet(
-      makeNumericLearnerParam(id = "eta", default = 0.3, lower = 0, upper = 1),
+      makeNumericLearnerParam(id = "eta", default = 0.1, lower = 0, upper = 1),
       makeNumericLearnerParam(id = "obj_par", default = 2, lower = 0),
-      makeIntegerLearnerParam(id = "max_depth", default = 6L, lower = 1L),
-      makeNumericLearnerParam(id = "min_child_weight", default = 1, lower = 0),
+      makeIntegerLearnerParam(id = "max_depth", default = 12L, lower = 1L),
+      makeNumericLearnerParam(id = "min_child_weight", default = 5, lower = 0),
       makeNumericLearnerParam(id = "subsample", default = 1, lower = 0, upper = 1),
-      makeNumericLearnerParam(id = "colsample_bytree", default = 1, lower = 0, upper = 1),
+      makeNumericLearnerParam(id = "colsample_bytree", default = 0.2, lower = 0, upper = 1),
       makeNumericLearnerParam(id = "lambda", default = 0, lower = 0),
       makeNumericLearnerParam(id = "alpha", default = 0, lower = 0),
       makeNumericLearnerParam(id = "base_score", default = 0.5, tunable = FALSE),
       makeIntegerLearnerParam(id = "nthread", lower = 1L, tunable = FALSE),
-      makeIntegerLearnerParam(id = "nrounds", default = 1L, lower = 1L),
+      makeUntypedLearnerParam(id = "eval_metric", default = "mae"),
+      makeIntegerLearnerParam(id = "nrounds", default = 100L, lower = 1L),
       makeIntegerLearnerParam(id = "silent", default = 0L, lower = 0L, upper = 1L, tunable = FALSE),
       makeIntegerLearnerParam(id = "verbose", default = 1, lower = 0, upper = 2, tunable = FALSE),
       makeIntegerLearnerParam(id = "print_every_n", default = 1L, lower = 1L, tunable = FALSE, requires = quote(verbose == 1L))
@@ -95,6 +96,13 @@ mae.log$fun = function (task, model, pred, feats, extra.args) {
   measureMAE(exp(pred$data$truth), exp(pred$data$response))
 }
 
+logcoshobj <- function(preds, dtrain) {
+  labels <- getinfo(dtrain, "label")
+  grad <- tanh(preds-labels)
+  hess <- 1-grad*grad
+  return(list(grad = grad, hess = hess))
+}
+
 # create mlr train and test task
 trainTask = makeRegrTask(data = as.data.frame(train), target = "loss")
 testTask = makeRegrTask(data = as.data.frame(test), target = "loss")
@@ -103,27 +111,28 @@ testTask = makeRegrTask(data = as.data.frame(test), target = "loss")
 set.seed(123)
 lrn = makeLearner("regr.xgboost.latest")
 lrn = setHyperPars(lrn, 
-  base_score = 7.7,
-  subsample = 0.95,
-  colsample_bytree = 0.45,
+  subsample = 1.0,
+  colsample_bytree = 0.2,
   max_depth = 10,
   lambda = 10,
-  min_child_weight = 2.5, 
+  min_child_weight = 5, 
   alpha = 8,
   nthread = 16, 
-  nrounds = 400,
-  eta = 0.055,
-  print_every_n = 50
+  nrounds = 500,
+  eta = 0.1,
+  print_every_n = 50,
+  eval_metric = mae.log,
+  objective = logcoshobj, #fairobj #logcoshobj, #cauchyobj #,#'reg:linear',
 )
 
 ## This is how you could do hyperparameter tuning with random search
 # 1) Define the set of parameters you want to tune (here we use only 'obj_par')
 ps = makeParamSet(
-  makeNumericParam("obj_par", lower = 1.5, upper = 2)
+  makeIntegerParam("max_depth", lower = 2, upper = 12)
 )
 
 # 2) Use 3-fold Cross-Validation to measure improvements
-rdesc = makeResampleDesc("CV", iters = 3L)
+rdesc = makeResampleDesc("CV", iters = 5L)
 
 # 3) Here we use random search (with 5 Iterations) to find the optimal hyperparameter
 ctrl =  makeTuneControlRandom(maxit = 5)
@@ -131,13 +140,17 @@ ctrl =  makeTuneControlRandom(maxit = 5)
 # 4) now use the learner on the training Task with the 3-fold CV to optimize your set of parameters in parallel
 #parallelStartMulticore(5)
 #res = tuneParams(lrn, task = trainTask, resampling = rdesc,
-#  par.set = ps, control = ctrl, measures = mae.log)
+#  par.set = ps, control = ctrl)
+
+res = tuneParams(learner, trainTask, resampling = rdesc, par.set = ps,
+                 control = makeTuneControlGrid())
+
 #parallelStop()
-# res$x
+ res$x
 
 # 5) We fit model using the hyperparameter we found from 4)
 set.seed(123)
-lrn = setHyperPars(lrn, obj_par = 1.717274)
+lrn = setHyperPars(lrn, par.vals = res$x)
 mod = train(lrn, trainTask)
  
 # 6) make Prediction
