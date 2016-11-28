@@ -1,8 +1,9 @@
-# Allstate Kaggle competition
-# Start: 10-13-16
+library(mlr)
+library(mlbench)
 library(dplyr)
 library(data.table)
-#load packages
+library(ranger)
+
 options(scipen=999) # remove scientific notation
 
 #Load data
@@ -10,8 +11,8 @@ train <- fread("Data/Raw/train.csv", stringsAsFactors=FALSE, header = TRUE)
 test <- fread("Data/Raw/test.csv", stringsAsFactors=FALSE, header = TRUE)
 
 # Drop cont columns 1, 6, 10, 11
-train <- subset(train, select =-c(cont1,cont6,cont11,cont10))
-test <- subset(test, select =-c(cont1,cont6,cont11,cont10))
+#train <- subset(train, select =-c(cont1,cont6,cont11,cont10))
+#test <- subset(test, select =-c(cont1,cont6,cont11,cont10))
 # Harmonize factors
 #set test loss to NA
 test$loss <- NA
@@ -30,7 +31,6 @@ train <- fullSet[fullSet$isTest==0,]
 test <- subset(test, select = -c(loss))
 test <- subset(test, select = -c(isTest))
 train <- subset(train, select = -c(isTest))
-#train$loss <- log(train$loss + 1)
 rm(fullSet)
 
 cat.var <- names(train)[which(sapply(train, is.factor))]
@@ -86,7 +86,7 @@ train <- fullSet[fullSet$isTest==0,]
 test <- subset(test, select = -c(loss))
 test <- subset(test, select = -c(isTest))
 train <- subset(train, select = -c(isTest))
-#train$loss <- log(train$loss + 1)
+
 rm(fullSet)
 
 ######
@@ -161,73 +161,118 @@ train <- fullSet[fullSet$isTest==0,]
 test <- subset(test, select = -c(loss))
 test <- subset(test, select = -c(isTest))
 train <- subset(train, select = -c(isTest))
-train$loss = log(train$loss + 200)
+
+train$loss <- log(train$loss + 200)
+test$loss <- -99
 rm(fullSet)
 
 ##########################################
-# Create split train set . . . RF, not splitting
-set.seed(212312)
-
-##########mlr
-library(mlr)
-library(mlbench)
-regr.task = makeRegrTask(id = "trainreg", data = train, target = "loss", weights = NULL, blocking = NULL, fixup.data = "warn", check.data = FALSE)
-
-learner <- makeLearner("regr.ranger")
-
-## This is how you could do hyperparameter tuning with random search
-# 1) Define the set of parameters you want to tune (here we use only 'obj_par')
-ps <- makeParamSet(makeIntegerParam("mtry", 3, 11),
-                   makeIntegerLearnerParam(id = "num.trees", lower = 1L, default = 500L),
-                   makeIntegerLearnerParam(id = "min.node.size", lower = 1L, default = 5L),
-                   makeLogicalLearnerParam(id = "respect.unordered.factors", default = TRUE),
-                   makeDiscreteLearnerParam(id = "importance", values = c("none", "impurity", "permutation"), default = "impurity", tunable = FALSE)
-                   )
-
-# Choose resampling strategy and define grid
-rdesc <- makeResampleDesc("CV", iters = 5)
-
-# Extract the variable importance in a regression tree
-r = resample("regr.ranger", regr.task, rdesc,
-             extract = function(x) x$learner.model$variable.importance)
-$r$extract
 
 
+makeRLearner.regr.ranger = function() {
+  makeRLearnerRegr(
+    cl = "regr.ranger",
+    package = "ranger",
+    par.set = makeParamSet(
+      makeIntegerLearnerParam(id = "num.trees", lower = 1L, default = 500L),
+      # FIXME: Add default value when data dependent defaults are implemented: mtry=floor(sqrt(#independent vars))
+      makeIntegerLearnerParam(id = "mtry", lower = 1L),
+      makeIntegerLearnerParam(id = "min.node.size", lower = 1L, default = 5L),
+      makeLogicalLearnerParam(id = "replace", default = TRUE),
+      makeNumericLearnerParam(id = "sample.fraction", lower = 0L, upper = 1L),
+      makeNumericVectorLearnerParam(id = "split.select.weights", lower = 0, upper = 1),
+      makeUntypedLearnerParam(id = "always.split.variables"),
+      makeLogicalLearnerParam(id = "respect.unordered.factors", default = TRUE),
+      makeDiscreteLearnerParam(id = "importance", values = c("none", "impurity", "permutation"), default = "none", tunable = FALSE),
+      makeLogicalLearnerParam(id = "write.forest", default = TRUE, tunable = FALSE),
+      makeLogicalLearnerParam(id = "scale.permutation.importance", default = FALSE, requires = quote(importance == "permutation"), tunable = FALSE),
+      makeIntegerLearnerParam(id = "num.threads", lower = 1L, when = "both", tunable = FALSE),
+      makeLogicalLearnerParam(id = "save.memory", default = FALSE, tunable = FALSE),
+      makeLogicalLearnerParam(id = "verbose", default = TRUE, when = "both", tunable = FALSE),
+      makeIntegerLearnerParam(id = "seed", when = "both", tunable = FALSE),
+      makeDiscreteLearnerParam(id = "splitrule", values = c("variance", "maxstat"), default = "variance"),
+      makeNumericLearnerParam(id = "alpha", lower = 0L, upper = 1L, default = 0.5, requires = quote(splitrule == "maxstat")),
+      makeNumericLearnerParam(id = "minprop", lower = 0L, upper = 1L, default = 0.1, requires = quote(splitrule == "maxstat")),
+      makeLogicalLearnerParam(id = "keep.inbag", default = FALSE, tunable = FALSE)
+    ),
+    par.vals = list(num.threads = 1L, verbose = FALSE, respect.unordered.factors = TRUE),
+    properties = c("numerics", "factors", "ordered", "featimp"),
+    name = "Random Forests",
+    short.name = "ranger",
+    note = "By default, internal parallelization is switched off (`num.threads = 1`), `verbose` output is disabled, `respect.unordered.factors` is set to `TRUE`. All settings are changeable."
+  )
+}
 
-# Tune
-res = tuneParams(learner, regr.task, rdesc, par.set = ps,
-                 control = makeTuneControlGrid())
+#' @export
+trainLearner.regr.ranger = function(.learner, .task, .subset, .weights, ...) {
+  tn = getTaskTargetNames(.task)
+  ranger::ranger(formula = NULL, dependent.variable = tn, data = getTaskData(.task, .subset), ...)
+}
+
+#' @export
+predictLearner.regr.ranger = function(.learner, .model, .newdata, ...) {
+  p = predict(object = .model$learner.model, data = .newdata, ...)
+  return(p$predictions)
+}
+
+#' @export
+getFeatureImportanceLearner.regr.ranger = function(.learner, .model, ...) {
+  getFeatureImportanceLearner.classif.ranger(.learner, .model, ...)
+}
+
+# create mlr train and test task
+trainTask = makeRegrTask(data = as.data.frame(train), target = "loss")
+testTask = makeRegrTask(data = as.data.frame(test), target = "loss")
+
+# specify mlr learner with some nice hyperpars
+set.seed(123)
+lrn = makeLearner("regr.ranger")
+lrn = setHyperPars(lrn, 
+                   num.trees = 200,
+                   min.node.size = 5,
+                   respect.unordered.factors = TRUE,
+                   verbose = TRUE,
+                   mtry = 5,
+                   importance = "impurity"
+)
+
+# 1) make parameter set
+ps = makeParamSet(
+  #makeIntegerParam("num.trees", lower = 5, upper = 200),
+  makeDiscreteParam("num.trees", values = c(200, 250, 500, 750, 1000)),
+  makeLogicalParam("respect.unordered.factors", TRUE),
+  makeDiscreteParam("importance", "impurity"),
+  makeIntegerParam("mtry", lower = 1, upper = 10)
+)
+
+# 2) Use 3-fold Cross-Validation to measure improvements
+rdesc = makeResampleDesc("CV", iters = 5L)
+
+# 3) Here we use random search (with 5 Iterations) to find the optimal hyperparameter
+ctrl =  makeTuneControlRandom(maxit = 5)
+
+# 4) now use the learner on the training Task with the 3-fold CV to optimize your set of parameters in parallel
+#parallelStartMulticore(5)
+#res = tuneParams(lrn, task = trainTask, resampling = rdesc,
+#                 par.set = ps, control = ctrl)
+res = tuneParams(lrn, task = trainTask, resampling = rdesc,
+                 par.set = ps, control = makeTuneControlGrid())
+
+res
 
 # Train on entire dataset (using best hyperparameters)
-lrn = setHyperPars(makeLearner("regr.ranger"), par.vals = res$x)
-mod = train(lrn, regr.task)
+lrn = setHyperPars(lrn, par.vals = res$x)
+mod = train(lrn, trainTask)
+
+task.pred = predict(mod, task = trainTask, subset = test.set)
+task.pred
 
 
-# caluclate performance 
-n = getTaskSize(regr.task)
-# do I need to do the next two steps if using CV
-#mod = train(lrn, task = regr.task, subset = seq(1, n, 2))
-pred = predict(mod, task = regr.task, subset = seq(2, n, 2))
-pred
-performance(pred, measures = list(mse, medse, mae))
+
+# 6) make Prediction
+pred = exp(getPredictionResponse(predict(mod, testTask))) - 200
 summary(pred)
-
-## Train the learner
-#mod = train("regr.ranger", regr.task, subset = train)
-#mod
-
-
-
-# predict on new data
-predict = predict(mod, newdata = test)
-predict
-
-loss <- as.data.frame(predict)
-#loss <- exp(loss)
-#loss <- exp(as.data.frame(predict)-1)
-solution <- data.frame(id = test$id, "loss" = loss)
-colnames(solution) <- c("id","loss")
-
-# Write the solution to file
-write.csv(solution, file = 'Submissions/mlr-ranger-v7-112116.csv', row.names = F)
-
+SUBMISSION_FILE = "Data/Raw/sample_submission.csv"
+submission = fread(SUBMISSION_FILE, colClasses = c("integer", "numeric"))
+submission$loss = pred
+write.csv(submission, "Submissions/mlr-ranger-framework-v4-11-30-16.csv", row.names = FALSE)
