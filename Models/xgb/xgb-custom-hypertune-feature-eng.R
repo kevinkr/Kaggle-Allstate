@@ -11,6 +11,13 @@ library(dplyr)
 require("ggplot2")
 require("Metrics")
 library(caret)
+library(e1071)
+library(MASS)
+library(forecast)
+library(scales)
+library(Hmisc)
+#library(stringer)
+
 
 ID = 'id'
 TARGET = 'loss'
@@ -22,6 +29,34 @@ SUBMISSION_FILE = "Data/Raw/sample_submission.csv"
 
 train = fread(TRAIN_FILE, showProgress = TRUE)
 test = fread(TEST_FILE, showProgress = TRUE)
+
+# remove skewness in train
+for (f in colnames(train)[colnames(train) %like% "^cont"]) {
+  tst <- e1071::skewness(train[, eval(as.name(f))])
+  if (tst > .25) {
+    if (is.na(train[, BoxCoxTrans(eval(as.name(f)))$lambda])) next
+    train[, eval(as.name(f)) := BoxCox(eval(as.name(f)), BoxCoxTrans(eval(as.name(f)))$lambda)]
+  }
+}
+
+# scale train
+for (f in colnames(train)[colnames(train) %like% "^cont"]) {
+  train[, eval(as.name(f)) := scale(eval(as.name(f)))]
+}
+
+# remove skewness in test
+for (f in colnames(test)[colnames(test) %like% "^cont"]) {
+  tst <- e1071::skewness(test[, eval(as.name(f))])
+  if (tst > .25) {
+    if (is.na(test[, BoxCoxTrans(eval(as.name(f)))$lambda])) next
+    test[, eval(as.name(f)) := BoxCox(eval(as.name(f)), BoxCoxTrans(eval(as.name(f)))$lambda)]
+  }
+}
+
+# scale test
+for (f in colnames(test)[colnames(test) %like% "^cont"]) {
+  test[, eval(as.name(f)) := scale(eval(as.name(f)))]
+}
 
 cat.var <- names(train)[which(sapply(train, is.character))]
 test.cat.var <- names(test)[which(sapply(test, is.character))]
@@ -198,50 +233,95 @@ dtest = xgb.DMatrix(as.matrix(x_test))
 rm(train,test,train_test,trainIndex,trainTestIndex,x_test,x_train)
 gc()
 
+# fair objective 2 for XGBoost
+
+amo.fairobj2 <- function(preds, dtrain) {
+  
+  labels <- getinfo(dtrain, "label")
+  con <- 2
+  x <- preds - labels
+  grad <- con * x / (abs(x) + con)
+  hess <- con ^ 2 / (abs(x) + con) ^ 2
+  
+  return(list(grad = grad, hess = hess))
+  
+}
+
+# MAE Metric for XGBoost
+# 
+# amm_mae <- function(preds
+#                     , dtrain) {
+#   
+#   labels <- xgboost::getinfo(dtrain, "label")
+#   elab <- as.numeric(labels)
+#   epreds <- as.numeric(preds)
+#   err <- mae(elab, epreds)
+#   
+#   return(list(metric = "amm_mae", value = err))
+#   
+# }
+
+amm_mae <- function(preds , dtrain) {
+  
+  labels <- xgboost::getinfo(dtrain, "label") 
+  elab <- as.numeric(labels) 
+  epreds <- as.numeric(preds) 
+  err <- mae(exp(elab)+200, exp(epreds)+200)
+  return(list(metric = "amm_mae", value = round(err,4)))
+  
+}
+
 xgb_params = list(
   alpha = 8,
   gamma = 1,
   lambda = .185,
-  min_child_weight = 1.12, #4-5,10  1817
+  min_child_weight = 100,
   nthread = 4,
-  num_parallel_tree = 2
+  num_parallel_tree = 2,
+  objective = amo.fairobj2
 )
 
 tuner_mae = data.frame("Rounds" = numeric(), 
-                        "Depth" = numeric(),
-                        "r_sample" = numeric(),
-                        "c_sample" = numeric(), 
-                        "minMAE:Test" = numeric(),
-                        "best_round" = numeric())
+                       "Depth" = numeric(),
+                       "r_sample" = numeric(),
+                       "c_sample" = numeric(), 
+                       "minMAE:Test" = numeric(),
+                       "best_round" = numeric())
 
-
-for (rounds in seq(300, 500, 50)){
+depth=4
+r_sample=.5
+c_sample=0.4
+rounds=300
+for (rounds in seq(300, 500, 100)){
   
   for (depth in c(4, 8, 12)) {
     
-    for (r_sample in c(0.5, 0.75)) {
+    for (r_sample in c(0.5, 0.6, 0.7)) {
       
-      for (c_sample in c(0.4, 0.6)) {
+      for (c_sample in c(0.4, 0.5, 0.6, 0.7)) {
         
         set.seed(1024)
         eta_val = 2 / rounds
         cv.res = xgb.cv(data = dtrain, 
                         nfold = 3, 
                         nrounds = rounds, 
-                        eta = 0.1, 
+                        eta = 0.03, 
                         max_depth = depth,
                         subsample = r_sample, 
                         colsample_bytree = c_sample,
-                        objective = 'reg:linear',
-                        early_stopping_rounds = 0.5*rounds,
+                        alpha = 8,
+                        gamma = 1,
+                        lambda = .185,
+                        early_stopping_rounds = 0.05*rounds,
                         print_every_n = 20,
-                        eval_metric = 'mae',
-                        verbose = FALSE,
+                        #eval_metric = 'mae',
+                        feval = amm_mae,
+                        verbose = TRUE,
                         maximize=FALSE)
         
         cv.res.log <- as.data.frame(cv.res$evaluation_log)
         
-
+        
         print(paste(rounds, depth, r_sample, c_sample, round(min(cv.res.log[,4]),4) ))
         tuner_mae[nrow(tuner_mae)+1, ] = c(rounds, 
                                              depth, 
