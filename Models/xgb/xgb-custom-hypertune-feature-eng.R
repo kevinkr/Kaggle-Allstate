@@ -272,9 +272,9 @@ amm_mae <- function(preds , dtrain) {
 }
 
 xgb_params = list(
-  alpha = 8,
-  gamma = 1,
-  lambda = .185,
+  alpha = 0,
+  gamma = 0,
+  lambda = 0,
   min_child_weight = 100,
   nthread = 4,
   num_parallel_tree = 2,
@@ -286,12 +286,12 @@ tuner_mae = data.frame("Rounds" = numeric(),
                        "r_sample" = numeric(),
                        "c_sample" = numeric(), 
                        "minMAE:Test" = numeric(),
-                       "best_round" = numeric())
+                       "best_round" = numeric(),
+                       "eta" = numeric(),
+                       "depth" = numeric()
+                       )
 
-depth=4
-r_sample=.5
-c_sample=0.4
-rounds=300
+
 for (rounds in seq(300, 500, 100)){
   
   for (depth in c(4, 8, 12)) {
@@ -301,22 +301,19 @@ for (rounds in seq(300, 500, 100)){
       for (c_sample in c(0.4, 0.5, 0.6, 0.7)) {
         
         set.seed(1024)
-        eta_val = 2 / rounds
+        eta_val = 5 / rounds
         cv.res = xgb.cv(data = dtrain, 
                         nfold = 3, 
                         nrounds = rounds, 
-                        eta = 0.03, 
+                        eta = eta_val, 
                         max_depth = depth,
                         subsample = r_sample, 
                         colsample_bytree = c_sample,
-                        alpha = 8,
-                        gamma = 1,
-                        lambda = .185,
                         early_stopping_rounds = 0.05*rounds,
                         print_every_n = 20,
                         #eval_metric = 'mae',
                         feval = amm_mae,
-                        verbose = TRUE,
+                        verbose = FALSE,
                         maximize=FALSE)
         
         cv.res.log <- as.data.frame(cv.res$evaluation_log)
@@ -328,7 +325,9 @@ for (rounds in seq(300, 500, 100)){
                                              r_sample, 
                                              c_sample, 
                                              min(cv.res.log[,4]), 
-                                             which.min(cv.res.log[,4]))
+                                             which.min(cv.res.log[,4]),
+                                             eta,
+                                             max_depth)
         gc()
       }
     }
