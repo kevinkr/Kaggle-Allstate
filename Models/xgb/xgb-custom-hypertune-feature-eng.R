@@ -269,16 +269,6 @@ amm_mae <- function(preds , dtrain) {
   
 }
 
-xgb_params = list(
-  alpha = 0,
-  gamma = 0,
-  lambda = 0,
-  min_child_weight = 100,
-  nthread = 4,
-  num_parallel_tree = 2,
-  objective = amo.fairobj2
-)
-
 tuner_mae = data.frame("Rounds" = numeric(), 
                        "Depth" = numeric(),
                        "r_sample" = numeric(),
@@ -287,17 +277,25 @@ tuner_mae = data.frame("Rounds" = numeric(),
                        "best_round" = numeric(),
                        "eta" = numeric(),
                        "depth" = numeric()
-                       )
+)
 
-eta_val = 0.1
+xgb_params = list(
+  gamma = 0,
+  min_child_weight = 50,
+  nthread = 4,
+  num_parallel_tree = 2,
+  objective = amo.fairobj2
+)
 
-for (rounds in seq(300, 500, 50)){
+eta_val = 0.3
+
+for (rounds in seq(100, 1000, 100)){
   
-  for (depth in c(4, 8, 12)) {
+  for (depth in c(4, 6, 8, 10, 12, 14)) {
     
-    for (r_sample in c(0.4, 0.5, 0.6, 0.7, 0.8)) {
+    for (r_sample in c(0.8)) {
       
-      for (c_sample in c(0.3, 0.4, 0.5, 0.6, 0.7)) {
+      for (c_sample in c(0.8)) {
         
         set.seed(1024)
         
