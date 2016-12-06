@@ -4,18 +4,16 @@
 # scores 1128 on public leaderboard but produced 1126 on my local run
 
 library(data.table)
-library(Matrix)
+#library(Matrix)
 library(xgboost)
-library(Metrics)
+#library(Metrics)
 library(dplyr)
-require("ggplot2")
-require("Metrics")
 library(caret)
 library(e1071)
 library(MASS)
-library(forecast)
-library(scales)
-library(Hmisc)
+#library(forecast)
+#library(scales)
+#library(Hmisc)
 #library(stringer)
 
 
@@ -291,6 +289,7 @@ tuner_mae = data.frame("Rounds" = numeric(),
                        "depth" = numeric()
                        )
 
+eta_val = 0.1
 
 for (rounds in seq(300, 500, 50)){
   
@@ -301,7 +300,7 @@ for (rounds in seq(300, 500, 50)){
       for (c_sample in c(0.3, 0.4, 0.5, 0.6, 0.7)) {
         
         set.seed(1024)
-        eta_val = 5 / rounds
+        
         cv.res = xgb.cv(data = dtrain, 
                         nfold = 3, 
                         nrounds = rounds, 
@@ -309,7 +308,7 @@ for (rounds in seq(300, 500, 50)){
                         max_depth = depth,
                         subsample = r_sample, 
                         colsample_bytree = c_sample,
-                        early_stopping_rounds = 0.05*rounds,
+                        early_stopping_rounds = 25,
                         print_every_n = 20,
                         #eval_metric = 'mae',
                         feval = amm_mae,
