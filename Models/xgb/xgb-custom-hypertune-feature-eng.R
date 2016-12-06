@@ -292,13 +292,13 @@ tuner_mae = data.frame("Rounds" = numeric(),
                        )
 
 
-for (rounds in seq(300, 500, 100)){
+for (rounds in seq(300, 500, 50)){
   
   for (depth in c(4, 8, 12)) {
     
-    for (r_sample in c(0.5, 0.6, 0.7)) {
+    for (r_sample in c(0.4, 0.5, 0.6, 0.7, 0.8)) {
       
-      for (c_sample in c(0.4, 0.5, 0.6, 0.7)) {
+      for (c_sample in c(0.3, 0.4, 0.5, 0.6, 0.7)) {
         
         set.seed(1024)
         eta_val = 5 / rounds
@@ -326,8 +326,8 @@ for (rounds in seq(300, 500, 100)){
                                              c_sample, 
                                              min(cv.res.log[,4]), 
                                              which.min(cv.res.log[,4]),
-                                             eta,
-                                             max_depth)
+                                             eta_val,
+                                             depth)
         gc()
       }
     }
