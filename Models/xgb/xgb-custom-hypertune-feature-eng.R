@@ -281,65 +281,66 @@ tuner_mae = data.frame("Rounds" = numeric(),
 )
 
 xgb_params = list(
-  gamma = 0,
+  rounds = 1000,
   nthread = 4,
   num_parallel_tree = 2,
   objective = amo.fairobj2
 )
 
-min_cw = 50
+for (min_cw in c(75, 100, 125)) {
 
-for (rounds in seq(100, 1000, 100)){
-  
-  for (depth in c(4, 6, 8, 10, 12, 14)) {
+  for (gamma in seq(0, 8, 2)){
     
-    for (r_sample in c(0.8)) {
+    for (depth in c(12)) {
       
-      for (c_sample in c(0.8)) {
+      for (r_sample in seq(0.8, 1.0, 0.1)) {
         
-        for (eta_val in c(0.3)) {
-        
-          set.seed(1024)
+        for (c_sample in seq(0.35, 0.45, 0.05)) {
           
-          cv.res = xgb.cv(data = dtrain, 
-                          nfold = 3, 
-                          nrounds = rounds, 
-                          eta = eta_val, 
-                          max_depth = depth,
-                          subsample = r_sample,
-                          min_child_weight = min_cw,
-                          colsample_bytree = c_sample,
-                          early_stopping_rounds = 25,
-                          print_every_n = 20,
-                          #eval_metric = 'mae',
-                          feval = amm_mae,
-                          verbose = FALSE,
-                          maximize=FALSE)
+          for (eta_val in c(0.0175, 0.02, 0.0225)) {
           
-          cv.res.log <- as.data.frame(cv.res$evaluation_log)
-          
-          
-          print(paste(rounds, depth, r_sample, c_sample, round(min(cv.res.log[,4]),4) ))
-          tuner_mae[nrow(tuner_mae)+1, ] = c(rounds, 
-                                               depth, 
-                                               r_sample, 
-                                               c_sample, 
-                                               min(cv.res.log[,4]), 
-                                               which.min(cv.res.log[,4]),
-                                               eta_val,
-                                               depth,
-                                               min_cw)
-          gc()
+            set.seed(1024)
+            
+            cv.res = xgb.cv(data = dtrain, 
+                            nfold = 3, 
+                            nrounds = rounds, 
+                            eta = eta_val, 
+                            max_depth = depth,
+                            subsample = r_sample,
+                            min_child_weight = min_cw,
+                            colsample_bytree = c_sample,
+                            early_stopping_rounds = 25,
+                            print_every_n = 20,
+                            #eval_metric = 'mae',
+                            feval = amm_mae,
+                            verbose = FALSE,
+                            maximize=FALSE)
+            
+            cv.res.log <- as.data.frame(cv.res$evaluation_log)
+            
+            
+            print(paste(rounds, depth, r_sample, c_sample, round(min(cv.res.log[,4]),4), eta_val, min_cw ))
+            tuner_mae[nrow(tuner_mae)+1, ] = c(rounds, 
+                                                 depth, 
+                                                 r_sample, 
+                                                 c_sample, 
+                                                 min(cv.res.log[,4]), 
+                                                 which.min(cv.res.log[,4]),
+                                                 eta_val,
+                                                 depth,
+                                                 min_cw)
+            gc()
+          }
         }
       }
     }
   }
 }
 
-
-
-
-
+#write.csv(tuner_mae, file = "tuner_mae.csv",  row.names=FALSE)
+dfRead<-read.csv("tuner_mae.csv") # read the file
+all<-rbind(dfRead, tuner_mae)
+write.csv(all, file = "tuner_mae.csv",  row.names=FALSE)
 
 
 
